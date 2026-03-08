@@ -1,7 +1,7 @@
 const DEFAULT_CONFIG = {
   backendUrl: "http://127.0.0.1:8000/api",
   blockOnWarn: false,
-  failClosed: false,
+  failClosed: true,
   inspectToolResults: true,
   contentMaxChars: 12000,
   fileReadTools: ["read"],
@@ -10,6 +10,7 @@ const DEFAULT_CONFIG = {
   httpTools: ["browser", "web_fetch", "fetch_url"],
   contentInspectionTools: ["browser", "web_fetch", "fetch_url", "read"],
   ignoredTools: ["session_status"],
+  unclassifiedToolPolicy: "block",
 };
 
 const CONFIG_SCHEMA = {
@@ -27,6 +28,7 @@ const CONFIG_SCHEMA = {
     httpTools: { type: "array", items: { type: "string" } },
     contentInspectionTools: { type: "array", items: { type: "string" } },
     ignoredTools: { type: "array", items: { type: "string" } },
+    unclassifiedToolPolicy: { type: "string", enum: ["allow", "warn", "block"] },
   },
 };
 
@@ -38,13 +40,21 @@ function asStringArray(value, fallback) {
 }
 
 export function normalizePluginConfig(raw = {}) {
+  const unclassifiedToolPolicy =
+    raw.unclassifiedToolPolicy === "allow" ||
+    raw.unclassifiedToolPolicy === "warn" ||
+    raw.unclassifiedToolPolicy === "block"
+      ? raw.unclassifiedToolPolicy
+      : DEFAULT_CONFIG.unclassifiedToolPolicy;
+
   return {
     backendUrl:
       typeof raw.backendUrl === "string" && raw.backendUrl.trim()
         ? raw.backendUrl.replace(/\/+$/, "")
         : DEFAULT_CONFIG.backendUrl,
     blockOnWarn: Boolean(raw.blockOnWarn),
-    failClosed: Boolean(raw.failClosed),
+    failClosed:
+      typeof raw.failClosed === "boolean" ? raw.failClosed : DEFAULT_CONFIG.failClosed,
     inspectToolResults:
       typeof raw.inspectToolResults === "boolean"
         ? raw.inspectToolResults
@@ -62,6 +72,7 @@ export function normalizePluginConfig(raw = {}) {
       DEFAULT_CONFIG.contentInspectionTools,
     ),
     ignoredTools: asStringArray(raw.ignoredTools, DEFAULT_CONFIG.ignoredTools),
+    unclassifiedToolPolicy,
   };
 }
 
@@ -72,6 +83,17 @@ function normalizeName(value) {
 export function matchesConfiguredTool(toolName, configuredNames) {
   const normalized = normalizeName(toolName);
   return configuredNames.some((candidate) => normalizeName(candidate) === normalized);
+}
+
+function isKnownTool(toolName, pluginConfig) {
+  return (
+    matchesConfiguredTool(toolName, pluginConfig.fileReadTools) ||
+    matchesConfiguredTool(toolName, pluginConfig.fileWriteTools) ||
+    matchesConfiguredTool(toolName, pluginConfig.shellTools) ||
+    matchesConfiguredTool(toolName, pluginConfig.httpTools) ||
+    matchesConfiguredTool(toolName, pluginConfig.contentInspectionTools) ||
+    matchesConfiguredTool(toolName, pluginConfig.ignoredTools)
+  );
 }
 
 function firstString(params, keys) {
@@ -347,6 +369,28 @@ function installGatewayMethod(api, pluginConfig) {
 
 function installToolHooks(api, pluginConfig) {
   api.on("before_tool_call", async (event, ctx) => {
+    if (!isKnownTool(event.toolName, pluginConfig)) {
+      const message = `ClawShield has no classification for tool "${event.toolName}". Add it to the plugin config or ignore it explicitly.`;
+      if (pluginConfig.unclassifiedToolPolicy === "block") {
+        return {
+          block: true,
+          blockReason: message,
+        };
+      }
+      if (pluginConfig.unclassifiedToolPolicy === "warn") {
+        log(api.logger, "warn", "ClawShield encountered an unclassified tool", {
+          toolName: event.toolName,
+        });
+        if (pluginConfig.blockOnWarn) {
+          return {
+            block: true,
+            blockReason: message,
+          };
+        }
+      }
+      return;
+    }
+
     const payload = inferRuntimeEvent(event.toolName, event.params, ctx, pluginConfig);
     if (!payload) {
       return;
@@ -395,7 +439,7 @@ function installToolHooks(api, pluginConfig) {
     try {
       const contentResult = await checkContent(pluginConfig, {
         text,
-        session_id: ctx?.sessionKey,
+        session_id: ctx?.sessionKey || ctx?.sessionId,
         source: `openclaw-tool:${event.toolName}`,
       });
       if (contentResult.injection_score >= 35) {

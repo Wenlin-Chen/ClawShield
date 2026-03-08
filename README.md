@@ -103,6 +103,10 @@ The plugin currently uses:
 - `after_tool_call` to inspect text-bearing tool output with `POST /api/check-content`
 - `openclaw clawshield scan-skill <path>` as the current skill scan entrypoint
 
+The OpenClaw plugin now defaults to `failClosed: true`, and tools that are not
+classified in the plugin config are blocked until you map or ignore them
+explicitly.
+
 Start with [docs/openclaw-integration.md](docs/openclaw-integration.md) for the
 step-by-step OpenClaw setup guide.
 
@@ -157,6 +161,7 @@ rulepack format yet.
 - Sensitive path and secret patterns live in [`backend/app/sensitive_data.py`](backend/app/sensitive_data.py) under `SENSITIVE_PATH_MARKERS` and `SECRET_PATTERNS`.
 - Runtime policy defaults live in [`backend/app/policy_engine.py`](backend/app/policy_engine.py), especially `SAFE_DOMAINS`, `DANGEROUS_COMMAND_PATTERNS`, and `evaluate_event`.
 - OpenClaw tool-name mapping is configured separately in `plugins.entries.clawshield.config`; see [docs/openclaw-integration.md](docs/openclaw-integration.md).
+- Path-based skill scans are limited to configured skill roots via `CLAWSHIELD_SCAN_ROOTS`; use file upload if you do not want to expose a local path root to the backend.
 
 If you change rules, restart the backend and run:
 

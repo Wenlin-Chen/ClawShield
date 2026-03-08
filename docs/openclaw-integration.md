@@ -74,14 +74,15 @@ Example:
         "config": {
           "backendUrl": "http://127.0.0.1:8000/api",
           "blockOnWarn": false,
-          "failClosed": false,
+          "failClosed": true,
           "inspectToolResults": true,
           "fileReadTools": ["read", "fs.read"],
           "fileWriteTools": ["write", "apply_patch", "fs.write"],
           "shellTools": ["exec", "shell", "system.run"],
           "httpTools": ["browser", "web_fetch", "fetch_url"],
           "contentInspectionTools": ["browser", "web_fetch", "fetch_url", "read"],
-          "ignoredTools": ["session_status"]
+          "ignoredTools": ["session_status"],
+          "unclassifiedToolPolicy": "block"
         }
       }
     }
@@ -126,6 +127,8 @@ you expect.
 - `httpTools`: tools that fetch remote URLs or make outbound HTTP requests
 - `contentInspectionTools`: tools whose returned text should be checked for prompt injection
 - `ignoredTools`: tools you do not want `ClawShield` to evaluate
+- `unclassifiedToolPolicy`: what to do when OpenClaw calls a tool that is not
+  in any of the lists above
 
 #### Example
 
@@ -147,7 +150,8 @@ Then your `clawshield` plugin config should look like:
   "shellTools": ["exec"],
   "httpTools": ["browser"],
   "contentInspectionTools": ["browser", "read"],
-  "ignoredTools": ["session_status"]
+  "ignoredTools": ["session_status"],
+  "unclassifiedToolPolicy": "block"
 }
 ```
 
@@ -157,6 +161,9 @@ Then your `clawshield` plugin config should look like:
 - Matching is case-insensitive.
 - Do not put group names such as `group:plugins` into these lists. Use concrete
   tool names only.
+- Unclassified tools are blocked by default. If OpenClaw calls a tool that is
+  missing from these lists, add it to the right category or place it in
+  `ignoredTools` if you intentionally do not want ClawShield to inspect it.
 - Start with the defaults shown above if you use a standard local coding setup,
   then adjust only if your OpenClaw config uses different names.
 
@@ -214,6 +221,16 @@ openclaw clawshield scan-skill /absolute/path/to/skill
 That command calls `POST /api/scan-skill` and prints the recommendation plus
 findings.
 
+For security, path-based scans are limited to configured scan roots. By
+default, ClawShield allows:
+
+- `~/.openclaw/skills`
+- `<clawshield-repo>/skills`
+- `<clawshield-repo>/backend/demo_skills`
+
+If your skills live elsewhere, set `CLAWSHIELD_SCAN_ROOTS` on the backend to a
+comma-separated list of allowed skill directories.
+
 ### 9. Review what happened in the ClawShield dashboard
 
 Open [http://localhost:5173](http://localhost:5173) to review:
@@ -270,8 +287,8 @@ That currently calls:
 - Skill scanning is currently a CLI helper, because the OpenClaw docs used for
   this repo document tool lifecycle hooks but do not document a dedicated
   skill-install lifecycle hook.
-- If `failClosed` is `false` and the backend is down, OpenClaw will keep
-  running and the plugin will only log the backend failure.
+- `failClosed` defaults to `true`. If you turn it off and the backend is down,
+  OpenClaw will keep running and the plugin will only log the backend failure.
 - This is still an experimental security layer, not a complete sandbox or host
   EDR.
 

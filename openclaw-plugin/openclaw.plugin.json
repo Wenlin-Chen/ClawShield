@@ -59,6 +59,10 @@
         "items": {
           "type": "string"
         }
+      },
+      "unclassifiedToolPolicy": {
+        "type": "string",
+        "enum": ["allow", "warn", "block"]
       }
     }
   },
@@ -78,7 +82,9 @@
     },
     "contentMaxChars": {
       "label": "Max characters to inspect from tool results"
+    },
+    "unclassifiedToolPolicy": {
+      "label": "Policy for unclassified tools"
     }
   }
 }
-

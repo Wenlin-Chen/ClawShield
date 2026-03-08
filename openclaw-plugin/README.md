@@ -39,8 +39,9 @@ Example:
         "config": {
           "backendUrl": "http://127.0.0.1:8000/api",
           "blockOnWarn": false,
-          "failClosed": false,
-          "inspectToolResults": true
+          "failClosed": true,
+          "inspectToolResults": true,
+          "unclassifiedToolPolicy": "block"
         }
       }
     }
@@ -58,7 +59,9 @@ Match these lists to the tool names your OpenClaw install exposes:
   "fileWriteTools": ["write", "apply_patch", "fs.write"],
   "shellTools": ["exec", "shell", "system.run"],
   "httpTools": ["browser", "web_fetch", "fetch_url"],
-  "contentInspectionTools": ["browser", "web_fetch", "fetch_url", "read"]
+  "contentInspectionTools": ["browser", "web_fetch", "fetch_url", "read"],
+  "ignoredTools": ["session_status"],
+  "unclassifiedToolPolicy": "block"
 }
 ```
 
@@ -74,11 +77,15 @@ Name matching is case-insensitive.
 ## Notes
 
 - This plugin is the preferred OpenClaw integration path.
+- `failClosed` defaults to `true`, so backend outages block protected tool
+  execution unless you explicitly change that setting.
 - Skill scanning is exposed as an OpenClaw CLI helper because the official
   OpenClaw docs used for this repo document tool lifecycle hooks, but not a
   dedicated skill-install lifecycle hook.
 - Tool-name mapping is configurable so you can adapt it to your OpenClaw tool
   inventory without changing code.
+- Tools that are not classified or ignored in the plugin config are blocked by
+  default so they do not silently bypass enforcement.
 - Backend security rules are customized separately from plugin config. To add or
   tune rules, edit the backend rule sources documented in
   [`docs/policy-reference.md`](../docs/policy-reference.md), then restart the

@@ -18,3 +18,4 @@ frontend/vite.config.d.ts
 backend/app/__pycache__/
 backend/app/routes/__pycache__/
 backend/app/tests/__pycache__/
+code_review.md

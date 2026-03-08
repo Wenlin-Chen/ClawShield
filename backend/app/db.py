@@ -32,13 +32,17 @@ def _parse_json(value: str | None, fallback: Any) -> Any:
 def get_connection() -> sqlite3.Connection:
     db_path = get_db_path()
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(db_path)
+    connection = sqlite3.connect(db_path, timeout=30.0, check_same_thread=False)
     connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA busy_timeout = 30000")
+    connection.execute("PRAGMA foreign_keys = ON")
     return connection
 
 
 def init_db() -> None:
     with get_connection() as connection:
+        connection.execute("PRAGMA journal_mode = WAL")
+        connection.execute("PRAGMA synchronous = NORMAL")
         connection.executescript(
             """
             CREATE TABLE IF NOT EXISTS events (

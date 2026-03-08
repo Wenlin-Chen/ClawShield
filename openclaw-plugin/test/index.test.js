@@ -11,8 +11,10 @@ import {
 test("normalizePluginConfig applies defaults", () => {
   const config = normalizePluginConfig({});
   assert.equal(config.backendUrl, "http://127.0.0.1:8000/api");
+  assert.equal(config.failClosed, true);
   assert.equal(config.inspectToolResults, true);
   assert.deepEqual(config.fileReadTools, ["read"]);
+  assert.equal(config.unclassifiedToolPolicy, "block");
 });
 
 test("inferRuntimeEvent maps read tool to file_read", () => {
@@ -104,4 +106,34 @@ test("plugin register installs hooks and blocks denied tool calls", async () => 
   } finally {
     global.fetch = originalFetch;
   }
+});
+
+test("plugin blocks unclassified tools by default", async () => {
+  const plugin = createPlugin();
+  const hooks = new Map();
+
+  plugin.register({
+    pluginConfig: {},
+    logger: { info() {}, warn() {}, error() {} },
+    registerCli() {},
+    registerCommand() {},
+    registerGatewayMethod() {},
+    on(name, handler) {
+      hooks.set(name, handler);
+    },
+  });
+
+  const result = await hooks.get("before_tool_call")(
+    {
+      toolName: "custom_tool",
+      params: {},
+    },
+    { agentId: "main", sessionKey: "agent:main:main" },
+  );
+
+  assert.deepEqual(result, {
+    block: true,
+    blockReason:
+      'ClawShield has no classification for tool "custom_tool". Add it to the plugin config or ignore it explicitly.',
+  });
 });

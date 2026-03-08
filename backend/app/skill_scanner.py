@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .models import Recommendation, Severity
 from .schemas import ScanFinding, SkillScanResponse
-from .sensitive_data import SENSITIVE_PATH_MARKERS
+from .sensitive_data import SENSITIVE_SOURCE_MARKERS
 
 TEXT_SUFFIXES = {
     "",
@@ -109,8 +109,8 @@ def _scan_file(file_path: Path, findings: list[ScanFinding]) -> None:
                         score=rule.score,
                     )
                 )
-        for marker, label in SENSITIVE_PATH_MARKERS:
-            if marker.lower() in line.lower():
+        for pattern, label in SENSITIVE_SOURCE_MARKERS:
+            if pattern.search(line):
                 findings.append(
                     ScanFinding(
                         category="sensitive_access",
@@ -141,11 +141,19 @@ def _collect_scannable_files(path: Path) -> list[Path]:
     if not path.exists():
         raise FileNotFoundError(f"Skill path does not exist: {path}")
     if path.is_file():
+        if path.is_symlink():
+            raise ValueError(f"Skill file symlinks are not supported: {path}")
         if not _should_scan(path):
             raise ValueError(f"Skill file type is not supported for scanning: {path}")
         return [path]
     if path.is_dir():
-        return [file_path for file_path in sorted(path.rglob("*")) if _should_scan(file_path)]
+        files_to_scan: list[Path] = []
+        for file_path in sorted(path.rglob("*")):
+            if file_path.is_symlink():
+                raise ValueError(f"Skill directories containing symlinks are not supported: {file_path}")
+            if _should_scan(file_path):
+                files_to_scan.append(file_path)
+        return files_to_scan
     raise FileNotFoundError(f"Skill path is not a regular file or directory: {path}")
 
 

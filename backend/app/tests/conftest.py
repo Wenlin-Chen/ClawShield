@@ -18,6 +18,7 @@ from app.main import create_app  # noqa: E402
 def isolated_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     db_path = tmp_path / "test.db"
     monkeypatch.setenv("CLAWSHIELD_DB_PATH", str(db_path))
+    monkeypatch.setenv("CLAWSHIELD_SCAN_ROOTS", str(tmp_path))
     db.init_db()
     db.clear_all()
     return db_path

@@ -4,16 +4,18 @@ import re
 from pathlib import Path
 
 SENSITIVE_PATH_MARKERS = [
-    ("~/.ssh", "SSH material"),
-    (".ssh/", "SSH material"),
-    ("~/.aws", "AWS credentials"),
-    (".aws/", "AWS credentials"),
-    (".env", "dotenv secrets"),
-    ("id_rsa", "private key"),
-    ("id_ed25519", "private key"),
-    ("browser", "browser profile data"),
-    ("cookies", "session cookies"),
-    ("tokens", "access tokens"),
+    (re.compile(r"(^|/)\.ssh($|/)"), "SSH material"),
+    (re.compile(r"(^|/)\.aws($|/)"), "AWS credentials"),
+    (re.compile(r"(^|/)\.env(?:\.[^/]+)?$"), "dotenv secrets"),
+    (re.compile(r"(^|/)(id_rsa|id_ed25519)$"), "private key"),
+    (re.compile(r"(^|/)(cookies|cookies\.sqlite|login data|web data)$"), "browser session data"),
+]
+
+SENSITIVE_SOURCE_MARKERS = [
+    (re.compile(r"(?i)(~\/\.ssh|\.ssh\/|id_rsa\b|id_ed25519\b)"), "SSH material"),
+    (re.compile(r"(?i)(~\/\.aws|\.aws\/(?:credentials|config))"), "AWS credentials"),
+    (re.compile(r"(?i)(^|[^A-Za-z0-9_])\.env(?:\.[A-Za-z0-9_.-]+)?($|[^A-Za-z0-9_])"), "dotenv secrets"),
+    (re.compile(r"(?i)(cookies\.sqlite|login data|web data)"), "browser session data"),
 ]
 
 SECRET_PATTERNS = [
@@ -35,8 +37,8 @@ def _path_variants(path_value: str) -> list[str]:
 def match_sensitive_path(path_value: str) -> list[str]:
     matches: list[str] = []
     for variant in _path_variants(path_value):
-        for marker, label in SENSITIVE_PATH_MARKERS:
-            if marker.lower() in variant and label not in matches:
+        for pattern, label in SENSITIVE_PATH_MARKERS:
+            if pattern.search(variant) and label not in matches:
                 matches.append(label)
     return matches
 
@@ -58,4 +60,3 @@ def detect_secrets(text: str) -> list[dict[str, str]]:
 
 def summarize_payload_secrets(text: str) -> list[str]:
     return [secret["label"] for secret in detect_secrets(text)]
-

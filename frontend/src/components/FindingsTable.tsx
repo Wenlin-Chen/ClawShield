@@ -5,12 +5,6 @@ type FindingsTableProps = {
   findings: Array<FindingRecord | ScanFinding>;
 };
 
-function isStoredFinding(
-  finding: FindingRecord | ScanFinding,
-): finding is FindingRecord {
-  return "description" in finding;
-}
-
 function FindingsTable({ findings }: FindingsTableProps) {
   return (
     <div className="table-wrap">
@@ -31,9 +25,7 @@ function FindingsTable({ findings }: FindingsTableProps) {
                 <DecisionBadge label={finding.severity} />
               </td>
               <td>{finding.category}</td>
-              <td className="mono">
-                {isStoredFinding(finding) ? finding.evidence : finding.evidence}
-              </td>
+              <td className="mono">{finding.evidence}</td>
             </tr>
           ))}
         </tbody>
@@ -43,4 +35,3 @@ function FindingsTable({ findings }: FindingsTableProps) {
 }
 
 export default FindingsTable;
-
