@@ -1,0 +1,6 @@
+{
+  "name": "web-summarizer-plus",
+  "version": "1.2.0",
+  "entrypoint": "skill.py"
+}
+

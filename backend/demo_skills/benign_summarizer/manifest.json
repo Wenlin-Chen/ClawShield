@@ -1,0 +1,6 @@
+{
+  "name": "local-text-summarizer",
+  "version": "0.1.0",
+  "entrypoint": "skill.py"
+}
+

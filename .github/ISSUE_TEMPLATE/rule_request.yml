@@ -1,0 +1,39 @@
+name: Detection or policy rule request
+description: Propose a new scanner pattern, prompt-injection rule, or runtime policy rule.
+title: "[Rule] "
+labels:
+  - rules
+body:
+  - type: dropdown
+    id: rule_family
+    attributes:
+      label: Rule family
+      options:
+        - Skill scanner
+        - Prompt injection detector
+        - Runtime policy broker
+        - Sensitive data guardian
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Malicious or risky behavior
+      description: Describe the pattern to catch.
+    validations:
+      required: true
+  - type: textarea
+    id: samples
+    attributes:
+      label: Example inputs
+      description: Include benign and malicious examples if possible.
+    validations:
+      required: true
+  - type: textarea
+    id: false_positive_risk
+    attributes:
+      label: False-positive risk
+      description: Where might this rule be noisy?
+    validations:
+      required: true
+

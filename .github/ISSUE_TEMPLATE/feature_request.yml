@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a user-facing improvement or integration capability.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Backend policy engine
+        - Skill scanner
+        - Prompt injection detector
+        - Sensitive data guardian
+        - Frontend dashboard
+        - OpenClaw integration
+        - Documentation
+    validations:
+      required: true
+
