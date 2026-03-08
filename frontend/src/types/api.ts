@@ -96,3 +96,8 @@ export type DemoLoadResponse = {
   sample_sessions: string[];
 };
 
+export type ClearHistoryResponse = {
+  message: string;
+  cleared_events: number;
+  cleared_findings: number;
+};

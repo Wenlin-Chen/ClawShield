@@ -1,4 +1,4 @@
-# Releasing agent-shield
+# Releasing ClawShield
 
 This project uses Semantic Versioning.
 
@@ -21,4 +21,3 @@ This project uses Semantic Versioning.
 - Patch: fixes, doc updates, rule tuning without API breakage
 - Minor: backward-compatible features or new optional fields
 - Major: breaking API, schema, policy-contract, or runtime behavior changes
-

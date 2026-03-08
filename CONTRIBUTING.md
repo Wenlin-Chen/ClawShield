@@ -1,4 +1,4 @@
-# Contributing to agent-shield
+# Contributing to ClawShield
 
 Thanks for contributing. This project is aimed at practical local defenses for
 OpenClaw-like agents, so changes should optimize for clear security value,
@@ -77,4 +77,3 @@ When changing the scanner, prompt injection detector, or policy engine:
 Use GitHub Discussions for usage questions and design conversations once the
 repository enables Discussions. Until then, keep Issues focused on actionable
 bugs, feature work, and rule improvements.
-

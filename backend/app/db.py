@@ -11,11 +11,11 @@ from .models import Decision, EventType, Recommendation, Severity
 from .schemas import EventRecord, FindingRecord, RuntimeEventRequest
 
 APP_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DB_PATH = APP_ROOT / "data" / "agent_shield.db"
+DEFAULT_DB_PATH = APP_ROOT / "data" / "clawshield.db"
 
 
 def get_db_path() -> Path:
-    env_path = os.environ.get("AGENT_SHIELD_DB_PATH")
+    env_path = os.environ.get("CLAWSHIELD_DB_PATH")
     return Path(env_path).expanduser() if env_path else DEFAULT_DB_PATH
 
 
@@ -87,6 +87,30 @@ def clear_all() -> None:
         connection.execute("DELETE FROM events")
         connection.execute("DELETE FROM findings")
         connection.commit()
+
+
+def count_events(session_id: str | None = None) -> int:
+    query = "SELECT COUNT(*) FROM events {where_clause}"
+    params: list[Any] = []
+    where_clause = ""
+    if session_id:
+        where_clause = "WHERE session_id = ?"
+        params.append(session_id)
+    with get_connection() as connection:
+        row = connection.execute(query.format(where_clause=where_clause), params).fetchone()
+    return int(row[0] if row else 0)
+
+
+def count_findings(session_id: str | None = None) -> int:
+    query = "SELECT COUNT(*) FROM findings {where_clause}"
+    params: list[Any] = []
+    where_clause = ""
+    if session_id:
+        where_clause = "WHERE session_id = ?"
+        params.append(session_id)
+    with get_connection() as connection:
+        row = connection.execute(query.format(where_clause=where_clause), params).fetchone()
+    return int(row[0] if row else 0)
 
 
 def insert_event(

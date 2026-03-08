@@ -117,3 +117,8 @@ class DemoLoadResponse(BaseModel):
     inserted_findings: int
     sample_sessions: list[str] = Field(default_factory=list)
 
+
+class ClearHistoryResponse(BaseModel):
+    message: str
+    cleared_events: int
+    cleared_findings: int

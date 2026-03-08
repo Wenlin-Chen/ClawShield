@@ -1,8 +1,10 @@
 {
-  "name": "agent-shield-frontend",
+  "name": "clawshield-frontend",
   "private": true,
   "version": "0.1.0",
+  "description": "Frontend for ClawShield",
   "type": "module",
+  "contributors": ["Jiajun He", "Wenlin Chen"],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

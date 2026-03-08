@@ -1,6 +1,6 @@
 # Security Policy
 
-`agent-shield` is itself a security product. Please report vulnerabilities
+`ClawShield` is itself a security product. Please report vulnerabilities
 privately and do not publish exploit details in Issues, PRs, or Discussions
 before a fix is available.
 
@@ -60,4 +60,3 @@ maintainers should publish:
 - severity
 - mitigation guidance
 - acknowledgement for the reporter, if desired
-

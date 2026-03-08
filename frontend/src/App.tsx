@@ -8,9 +8,8 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div>
-          <p className="eyebrow">Local MVP</p>
-          <h1>agent-shield</h1>
+        <div className="sidebar-header">
+          <h1>ClawShield</h1>
           <p className="sidebar-copy">
             Agent antivirus and EDR controls for local OpenClaw-like agents.
           </p>
@@ -35,4 +34,3 @@ function App() {
 }
 
 export default App;
-

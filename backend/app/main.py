@@ -17,7 +17,7 @@ async def lifespan(_: FastAPI):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="agent-shield", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="ClawShield", version="0.1.0", lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

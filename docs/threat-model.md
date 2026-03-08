@@ -2,7 +2,7 @@
 
 ## Goal
 
-`agent-shield` aims to reduce the blast radius of local agent misuse, especially
+`ClawShield` aims to reduce the blast radius of local agent misuse, especially
 for agents that consume untrusted content, install extensions or skills, and
 touch local files or outbound network tools.
 
@@ -55,4 +55,3 @@ touch local files or outbound network tools.
 - Domain allowlisting is static
 - Frontend is an inspection UI, not an enforcement surface
 - There is no signed rulepack or attestation workflow yet
-

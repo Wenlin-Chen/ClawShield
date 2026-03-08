@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEvents, getFindings, loadDemoData } from "../api/client";
+import { clearHistory, getEvents, getFindings, loadDemoData } from "../api/client";
 import EventTimeline from "../components/EventTimeline";
 import FindingsTable from "../components/FindingsTable";
 import StatCard from "../components/StatCard";
@@ -41,6 +41,29 @@ function DashboardPage() {
     }
   }
 
+  async function handleClearHistory() {
+    const confirmed = window.confirm(
+      "Warning: this will permanently delete all stored audit events and findings. Continue?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await clearHistory();
+      setEvents([]);
+      setFindings([]);
+      setStatus(
+        `${result.message} Removed ${result.cleared_events} event(s) and ${result.cleared_findings} finding(s).`,
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to clear history.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const blockedEvents = events.filter((event) => event.decision === "block").length;
   const highFindings = findings.filter((finding) =>
     ["high", "critical"].includes(finding.severity),
@@ -57,6 +80,9 @@ function DashboardPage() {
           <button onClick={() => void handleLoadDemo()}>Load demo data</button>
           <button className="button-secondary" onClick={() => void refresh()}>
             Refresh
+          </button>
+          <button className="button-danger" onClick={() => void handleClearHistory()}>
+            Clear history
           </button>
         </div>
       </header>
@@ -84,4 +110,3 @@ function DashboardPage() {
 }
 
 export default DashboardPage;
-

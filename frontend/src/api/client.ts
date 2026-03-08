@@ -1,4 +1,5 @@
 import type {
+  ClearHistoryResponse,
   ContentCheckResponse,
   DemoLoadResponse,
   EventRecord,
@@ -31,6 +32,10 @@ export function loadDemoData(): Promise<DemoLoadResponse> {
   return request<DemoLoadResponse>("/demo/load-sample-data", { method: "POST" });
 }
 
+export function clearHistory(): Promise<ClearHistoryResponse> {
+  return request<ClearHistoryResponse>("/clear-history", { method: "POST" });
+}
+
 export function scanSkillByPath(path: string): Promise<SkillScanResponse> {
   return request<SkillScanResponse>("/scan-skill", {
     method: "POST",
@@ -39,9 +44,9 @@ export function scanSkillByPath(path: string): Promise<SkillScanResponse> {
   });
 }
 
-export function scanSkillArchive(file: File): Promise<SkillScanResponse> {
+export function scanSkillUpload(file: File): Promise<SkillScanResponse> {
   const formData = new FormData();
-  formData.append("archive", file);
+  formData.append("upload", file);
   return request<SkillScanResponse>("/scan-skill", {
     method: "POST",
     body: formData,
@@ -65,4 +70,3 @@ export function checkContent(text: string, sessionId?: string, source?: string) 
     body: JSON.stringify({ text, session_id: sessionId, source }),
   });
 }
-

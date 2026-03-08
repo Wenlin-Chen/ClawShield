@@ -1,6 +1,6 @@
 # OpenClaw Integration Guide
 
-`agent-shield` is designed to sit beside an OpenClaw-like runtime as a local
+`ClawShield` is designed to sit beside an OpenClaw-like runtime as a local
 security broker. The integration contract is intentionally simple:
 
 1. Scan a skill before enabling or updating it.
@@ -137,4 +137,3 @@ if event_verdict["decision"] == "block":
 - Forward only short payload excerpts; do not send full sensitive payloads to the
   broker.
 - Store the broker locally next to the agent for minimal latency and privacy.
-

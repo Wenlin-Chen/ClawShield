@@ -14,6 +14,7 @@ from ..models import Decision, Recommendation, Severity
 from ..policy_engine import evaluate_event
 from ..sample_data import load_sample_data
 from ..schemas import (
+    ClearHistoryResponse,
     ContentCheckRequest,
     ContentCheckResponse,
     DemoLoadResponse,
@@ -23,7 +24,7 @@ from ..schemas import (
     SkillScanRequest,
     SkillScanResponse,
 )
-from ..skill_scanner import scan_skill_directory
+from ..skill_scanner import scan_skill_path
 
 router = APIRouter(prefix="/api", tags=["security"])
 
@@ -66,7 +67,11 @@ def persist_policy_alert(event: RuntimeEventRequest, response: PolicyDecisionRes
 
 
 @router.post("/scan-skill", response_model=SkillScanResponse)
-async def scan_skill(request: Request, archive: UploadFile | None = File(default=None)) -> SkillScanResponse:
+async def scan_skill(
+    request: Request,
+    upload: UploadFile | None = File(default=None),
+    archive: UploadFile | None = File(default=None),
+) -> SkillScanResponse:
     content_type = request.headers.get("content-type", "")
     scan_id = f"scan-{uuid4().hex[:8]}"
 
@@ -74,24 +79,31 @@ async def scan_skill(request: Request, archive: UploadFile | None = File(default
         body = SkillScanRequest.model_validate(await request.json())
         if not body.path:
             raise HTTPException(status_code=400, detail="JSON request must include path.")
-        result = scan_skill_directory(Path(body.path).expanduser(), scan_id=scan_id)
+        result = scan_skill_path(Path(body.path).expanduser(), scan_id=scan_id)
         persist_scan_findings(result)
         return result
 
-    if archive is None:
-        raise HTTPException(status_code=400, detail="Provide either a JSON path or a zip upload.")
-    if not archive.filename or not archive.filename.endswith(".zip"):
-        raise HTTPException(status_code=400, detail="Only zip archives are supported for upload.")
+    incoming_file = upload or archive
+    if incoming_file is None:
+        raise HTTPException(status_code=400, detail="Provide either a JSON path or an uploaded zip or skill file.")
+    if not incoming_file.filename:
+        raise HTTPException(status_code=400, detail="Uploaded file must have a filename.")
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        archive_path = Path(temp_dir) / archive.filename
-        with archive_path.open("wb") as file_handle:
-            shutil.copyfileobj(archive.file, file_handle)
-        extract_root = Path(temp_dir) / "extracted"
-        with zipfile.ZipFile(archive_path) as zip_handle:
-            zip_handle.extractall(extract_root)
-        scan_root = next(iter(sorted(extract_root.iterdir())), extract_root)
-        result = scan_skill_directory(scan_root, scan_id=scan_id)
+        upload_path = Path(temp_dir) / incoming_file.filename
+        with upload_path.open("wb") as file_handle:
+            shutil.copyfileobj(incoming_file.file, file_handle)
+
+        if incoming_file.filename.endswith(".zip"):
+            extract_root = Path(temp_dir) / "extracted"
+            with zipfile.ZipFile(upload_path) as zip_handle:
+                zip_handle.extractall(extract_root)
+            scan_root = next(iter(sorted(extract_root.iterdir())), extract_root)
+            result = scan_skill_path(scan_root, scan_id=scan_id)
+            result.scanned_path = incoming_file.filename
+        else:
+            result = scan_skill_path(upload_path, scan_id=scan_id)
+            result.scanned_path = incoming_file.filename
         persist_scan_findings(result)
         return result
 
@@ -137,3 +149,14 @@ def check_content(payload: ContentCheckRequest) -> ContentCheckResponse:
 def load_demo() -> DemoLoadResponse:
     return load_sample_data()
 
+
+@router.post("/clear-history", response_model=ClearHistoryResponse)
+def clear_history() -> ClearHistoryResponse:
+    cleared_events = db.count_events()
+    cleared_findings = db.count_findings()
+    db.clear_all()
+    return ClearHistoryResponse(
+        message="Cleared stored audit events and findings.",
+        cleared_events=cleared_events,
+        cleared_findings=cleared_findings,
+    )

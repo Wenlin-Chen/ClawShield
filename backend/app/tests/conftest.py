@@ -17,7 +17,7 @@ from app.main import create_app  # noqa: E402
 @pytest.fixture()
 def isolated_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     db_path = tmp_path / "test.db"
-    monkeypatch.setenv("AGENT_SHIELD_DB_PATH", str(db_path))
+    monkeypatch.setenv("CLAWSHIELD_DB_PATH", str(db_path))
     db.init_db()
     db.clear_all()
     return db_path
@@ -28,4 +28,3 @@ def client(isolated_db: Path) -> TestClient:
     app = create_app()
     with TestClient(app) as test_client:
         yield test_client
-

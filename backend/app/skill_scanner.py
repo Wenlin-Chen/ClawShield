@@ -91,69 +91,82 @@ def _risk_recommendation(score: int, findings: list[ScanFinding]) -> Recommendat
     return Recommendation.ALLOW
 
 
-def scan_skill_directory(path: Path, scan_id: str) -> SkillScanResponse:
-    if not path.exists() or not path.is_dir():
-        raise FileNotFoundError(f"Skill path does not exist or is not a directory: {path}")
+def _scan_file(file_path: Path, findings: list[ScanFinding]) -> None:
+    content = file_path.read_text(encoding="utf-8", errors="ignore")
+    lines = content.splitlines() or [content]
 
-    findings: list[ScanFinding] = []
-    scanned_files = 0
-
-    for file_path in sorted(path.rglob("*")):
-        if not _should_scan(file_path):
-            continue
-        scanned_files += 1
-        content = file_path.read_text(encoding="utf-8", errors="ignore")
-        lines = content.splitlines() or [content]
-
-        for line_number, line in enumerate(lines, start=1):
-            for rule in SCANNER_RULES:
-                if rule.pattern.search(line):
-                    findings.append(
-                        ScanFinding(
-                            category=rule.category,
-                            severity=rule.severity,
-                            title=rule.title,
-                            evidence=line.strip(),
-                            file_path=str(file_path),
-                            line_number=line_number,
-                            score=rule.score,
-                        )
+    for line_number, line in enumerate(lines, start=1):
+        for rule in SCANNER_RULES:
+            if rule.pattern.search(line):
+                findings.append(
+                    ScanFinding(
+                        category=rule.category,
+                        severity=rule.severity,
+                        title=rule.title,
+                        evidence=line.strip(),
+                        file_path=str(file_path),
+                        line_number=line_number,
+                        score=rule.score,
                     )
-            for marker, label in SENSITIVE_PATH_MARKERS:
-                if marker.lower() in line.lower():
-                    findings.append(
-                        ScanFinding(
-                            category="sensitive_access",
-                            severity=Severity.HIGH,
-                            title=f"References sensitive location: {label}",
-                            evidence=line.strip(),
-                            file_path=str(file_path),
-                            line_number=line_number,
-                            score=20,
-                        )
-                    )
-
-        if "base64.b64decode" in content and re.search(r"\b(?:eval|exec|os\.system|subprocess\.)", content):
-            findings.append(
-                ScanFinding(
-                    category="obfuscation",
-                    severity=Severity.CRITICAL,
-                    title="Combines base64 decode with code execution",
-                    evidence="base64 decode combined with dynamic execution primitives",
-                    file_path=str(file_path),
-                    line_number=None,
-                    score=30,
                 )
+        for marker, label in SENSITIVE_PATH_MARKERS:
+            if marker.lower() in line.lower():
+                findings.append(
+                    ScanFinding(
+                        category="sensitive_access",
+                        severity=Severity.HIGH,
+                        title=f"References sensitive location: {label}",
+                        evidence=line.strip(),
+                        file_path=str(file_path),
+                        line_number=line_number,
+                        score=20,
+                    )
+                )
+
+    if "base64.b64decode" in content and re.search(r"\b(?:eval|exec|os\.system|subprocess\.)", content):
+        findings.append(
+            ScanFinding(
+                category="obfuscation",
+                severity=Severity.CRITICAL,
+                title="Combines base64 decode with code execution",
+                evidence="base64 decode combined with dynamic execution primitives",
+                file_path=str(file_path),
+                line_number=None,
+                score=30,
             )
+        )
+
+
+def _collect_scannable_files(path: Path) -> list[Path]:
+    if not path.exists():
+        raise FileNotFoundError(f"Skill path does not exist: {path}")
+    if path.is_file():
+        if not _should_scan(path):
+            raise ValueError(f"Skill file type is not supported for scanning: {path}")
+        return [path]
+    if path.is_dir():
+        return [file_path for file_path in sorted(path.rglob("*")) if _should_scan(file_path)]
+    raise FileNotFoundError(f"Skill path is not a regular file or directory: {path}")
+
+
+def scan_skill_path(path: Path, scan_id: str) -> SkillScanResponse:
+    files_to_scan = _collect_scannable_files(path)
+    findings: list[ScanFinding] = []
+
+    for file_path in files_to_scan:
+        _scan_file(file_path, findings)
 
     score = min(sum(finding.score for finding in findings), 100)
     recommendation = _risk_recommendation(score, findings)
     return SkillScanResponse(
         scan_id=scan_id,
         scanned_path=str(path),
-        scanned_files=scanned_files,
+        scanned_files=len(files_to_scan),
         score=score,
         recommendation=recommendation,
         findings=findings,
     )
 
+
+def scan_skill_directory(path: Path, scan_id: str) -> SkillScanResponse:
+    return scan_skill_path(path, scan_id=scan_id)

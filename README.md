@@ -1,17 +1,17 @@
-# Agent Shield
+# ClawShield
 
-`agent-shield` is a local agent antivirus / agent EDR wrapper for OpenClaw-like
+`ClawShield` is a local agent antivirus / agent EDR wrapper for OpenClaw-like
 agents. It scans risky skills before install, evaluates sensitive runtime tool
 calls before execution, detects prompt injection in untrusted content, and keeps
 an audit trail of alerts and blocked actions.
 
 > [!WARNING]
-> **Experimental software:** `agent-shield` is an early-stage experimental
+> **Experimental software:** `ClawShield` is an early-stage experimental
 > project. It is not production-ready, it has known detection gaps, and it
 > should not be relied on as a sole security control for protecting sensitive
 > systems or data.
 
-![agent-shield preview](docs/preview.svg)
+![ClawShield preview](docs/preview.svg)
 
 ## Why this exists
 
@@ -25,7 +25,7 @@ create a clear local security gap:
 - users need a local, inspectable control plane instead of opaque "trust me"
   agent safety
 
-`agent-shield` is meant to be that control plane for local development and
+`ClawShield` is meant to be that control plane for local development and
 experimentation.
 
 ## What it protects against
@@ -50,7 +50,7 @@ Read the fuller threat model in [docs/threat-model.md](docs/threat-model.md).
 
 - `backend/`: FastAPI, stdlib `sqlite3`, pytest
 - `frontend/`: React, Vite, TypeScript
-- Storage: local SQLite database at `backend/data/agent_shield.db`
+- Storage: local SQLite database at `backend/data/clawshield.db`
 
 ## 60-second quickstart
 
@@ -58,8 +58,7 @@ Read the fuller threat model in [docs/threat-model.md](docs/threat-model.md).
 
 ```bash
 make install
-make run-backend
-make run-frontend
+make dev
 ```
 
 Backend:
@@ -135,6 +134,7 @@ event contract and enforcement flow.
 
 ```bash
 make install
+make dev
 make test-backend
 make build-frontend
 make check
@@ -188,9 +188,9 @@ Use the dashboard button to load sample data, then inspect the seeded sessions i
 This project aims to follow Semantic Versioning. Release notes live in
 [CHANGELOG.md](CHANGELOG.md).
 
-## Suggested next steps for maintainers
+## Authors
 
-1. Add real filesystem/network hooks around the target agent runtime.
-2. Expand the secret detector with entropy-based and provider-specific patterns.
-3. Attach signed scan attestations to skill install workflows.
-4. Add session drill-down filters and richer forensics in the dashboard.
+- [Jiajun He](https://jiajunhe98.github.io)
+- [Wenlin Chen](https://wenlin-chen.github.io)
+
+See [AUTHORS.md](AUTHORS.md) for the canonical author list.

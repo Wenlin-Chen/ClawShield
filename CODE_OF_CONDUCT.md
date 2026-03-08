@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We want `agent-shield` to be a professional, technically rigorous, and welcoming
+We want `ClawShield` to be a professional, technically rigorous, and welcoming
 project for contributors, users, and researchers. We expect participants to act
 with respect, curiosity, and care, especially when discussing security findings,
 threat models, and operational failures.
@@ -46,4 +46,3 @@ follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
 ## Attribution
 
 This document is adapted from the Contributor Covenant, version 2.1.
-
