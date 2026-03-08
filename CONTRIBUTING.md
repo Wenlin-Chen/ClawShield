@@ -60,6 +60,11 @@ python3 -m compileall backend/app
 
 When changing the scanner, prompt injection detector, or policy engine:
 
+- Update the relevant backend rule source:
+  - `backend/app/skill_scanner.py`
+  - `backend/app/injection_detector.py`
+  - `backend/app/sensitive_data.py`
+  - `backend/app/policy_engine.py`
 - Document the new rule in [docs/policy-reference.md](docs/policy-reference.md).
 - Add at least one positive test and one false-positive guard.
 - Include representative evidence strings in fixtures or tests.

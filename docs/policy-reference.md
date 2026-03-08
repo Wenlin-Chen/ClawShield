@@ -1,7 +1,7 @@
 # Policy Reference
 
 This document describes the default policy and detection rules shipped in the
-MVP. These defaults are intentionally conservative.
+ClawShield. These defaults are intentionally conservative.
 
 ## Skill scanner rules
 
@@ -105,12 +105,48 @@ Current built-in safe domains:
 - `::1`
 - `example.com`
 
-## Customization direction
+## How to add your own rules today
 
-The MVP keeps rules in code. Near-term customization should add:
+ClawShield keeps detection and policy rules in code today. There is no UI rule
+editor or standalone policy bundle format yet.
+
+### 1. Edit the rule source that matches your use case
+
+- Skill scanning: [`backend/app/skill_scanner.py`](../backend/app/skill_scanner.py)
+  Update `SCANNER_RULES` to add or tune signatures.
+- Prompt injection detection: [`backend/app/injection_detector.py`](../backend/app/injection_detector.py)
+  Update `RULES` to add or tune text patterns and weights.
+- Sensitive file and secret detection: [`backend/app/sensitive_data.py`](../backend/app/sensitive_data.py)
+  Update `SENSITIVE_PATH_MARKERS` and `SECRET_PATTERNS`.
+- Runtime policy decisions: [`backend/app/policy_engine.py`](../backend/app/policy_engine.py)
+  Update `SAFE_DOMAINS`, `DANGEROUS_COMMAND_PATTERNS`, or `evaluate_event`.
+
+### 2. Add tests for both detection and false-positive control
+
+- Put scanner, injection, and policy tests in [`backend/app/tests/`](../backend/app/tests/).
+- Add at least one positive case and one benign case for every new rule.
+
+### 3. Restart the backend and re-run checks
+
+```bash
+make test-backend
+make test-openclaw-plugin
+```
+
+Then restart the backend so the new rule set is loaded.
+
+### 4. Adjust OpenClaw plugin config separately when needed
+
+If your OpenClaw install uses different tool names, update
+`plugins.entries.clawshield.config` in your Gateway config. That mapping lives
+in the plugin config, not in the backend rules. See
+[docs/openclaw-integration.md](openclaw-integration.md).
+
+## Planned configuration improvements
+
+Near-term customization work is tracked for:
 
 - configurable allowlisted domains
 - configurable sensitive path patterns
 - configurable severity thresholds
 - import/export support for policy bundles
-

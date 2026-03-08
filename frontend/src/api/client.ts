@@ -1,7 +1,6 @@
 import type {
   ClearHistoryResponse,
   ContentCheckResponse,
-  DemoLoadResponse,
   EventRecord,
   FindingRecord,
   PolicyDecisionResponse,
@@ -26,10 +25,6 @@ export function getEvents(): Promise<EventRecord[]> {
 
 export function getFindings(): Promise<FindingRecord[]> {
   return request<FindingRecord[]>("/findings");
-}
-
-export function loadDemoData(): Promise<DemoLoadResponse> {
-  return request<DemoLoadResponse>("/demo/load-sample-data", { method: "POST" });
 }
 
 export function clearHistory(): Promise<ClearHistoryResponse> {

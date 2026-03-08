@@ -8,7 +8,7 @@ const BENIGN_SAMPLE =
 
 function InjectionInspectorPage() {
   const [text, setText] = useState(MALICIOUS_SAMPLE);
-  const [sessionId, setSessionId] = useState("demo-malicious-session");
+  const [sessionId, setSessionId] = useState("session-001");
   const [status, setStatus] = useState("Paste external content to inspect for prompt injection.");
   const [result, setResult] = useState<{
     score: number;
@@ -53,10 +53,10 @@ function InjectionInspectorPage() {
         <div className="actions">
           <button type="submit">Check content</button>
           <button className="button-secondary" type="button" onClick={() => setText(MALICIOUS_SAMPLE)}>
-            Malicious sample
+            High-risk example
           </button>
           <button className="button-secondary" type="button" onClick={() => setText(BENIGN_SAMPLE)}>
-            Benign sample
+            Benign example
           </button>
         </div>
         <p className="status">{status}</p>

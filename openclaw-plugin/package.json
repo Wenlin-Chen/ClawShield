@@ -1,0 +1,18 @@
+{
+  "name": "@clawshield/openclaw-plugin",
+  "version": "0.1.0",
+  "description": "ClawShield security plugin for OpenClaw",
+  "type": "module",
+  "main": "./index.js",
+  "exports": "./index.js",
+  "license": "Apache-2.0",
+  "contributors": ["Jiajun He", "Wenlin Chen"],
+  "keywords": ["openclaw", "plugin", "security", "guardrails", "clawshield"],
+  "files": ["index.js", "openclaw.plugin.json", "README.md"],
+  "engines": {
+    "node": ">=18"
+  },
+  "openclaw": {
+    "extensions": ["./index.js"]
+  }
+}

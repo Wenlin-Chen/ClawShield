@@ -1,0 +1,84 @@
+{
+  "id": "clawshield",
+  "name": "ClawShield",
+  "description": "Runtime guardrails for OpenClaw tool calls backed by the local ClawShield service.",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "backendUrl": {
+        "type": "string"
+      },
+      "blockOnWarn": {
+        "type": "boolean"
+      },
+      "failClosed": {
+        "type": "boolean"
+      },
+      "inspectToolResults": {
+        "type": "boolean"
+      },
+      "contentMaxChars": {
+        "type": "integer",
+        "minimum": 256,
+        "maximum": 20000
+      },
+      "fileReadTools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "fileWriteTools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "shellTools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "httpTools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "contentInspectionTools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ignoredTools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "uiHints": {
+    "backendUrl": {
+      "label": "ClawShield backend URL",
+      "placeholder": "http://127.0.0.1:8000/api"
+    },
+    "blockOnWarn": {
+      "label": "Block on warnings"
+    },
+    "failClosed": {
+      "label": "Fail closed when backend is unavailable"
+    },
+    "inspectToolResults": {
+      "label": "Inspect tool results for prompt injection"
+    },
+    "contentMaxChars": {
+      "label": "Max characters to inspect from tool results"
+    }
+  }
+}
+

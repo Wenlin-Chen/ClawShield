@@ -9,13 +9,13 @@ Semantic Versioning.
 
 ### Added
 
-- Initial open-source MVP for local agent security controls
+- Initial open-source implementation for local agent security controls
 - FastAPI backend for skill scanning, runtime policy evaluation, prompt
   injection checks, audit events, and findings
+- Native OpenClaw plugin package for hook-based runtime enforcement
 - React dashboard for audit review, skill scans, runtime simulation, and
   injection inspection
-- Demo skill fixtures and sample data loader
+- Local fixture data for validation and testing
 - Backend test suite covering scanner, policy engine, injection detector, and
   API smoke paths
 - Open-source governance, documentation, CI, Docker setup, and community files
-

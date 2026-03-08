@@ -3,7 +3,8 @@
 ## Near-term
 
 - Add configurable policy overrides and domain allowlists
-- Support real OpenClaw event interception instead of simulated API calls
+- Publish and harden the OpenClaw plugin with broader hook coverage
+- Add first-class skill lifecycle interception if OpenClaw exposes a documented hook
 - Expand secret detection coverage with provider-specific patterns
 - Add session filtering and detail drill-down in the audit console
 
@@ -20,4 +21,3 @@
 - Add host telemetry adapters for filesystem and process monitoring
 - Publish a stable policy SDK for other agent frameworks
 - Provide a benchmark corpus for detection quality and false-positive tracking
-

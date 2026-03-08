@@ -89,13 +89,6 @@ export type EventRecord = {
   created_at: string;
 };
 
-export type DemoLoadResponse = {
-  message: string;
-  inserted_events: number;
-  inserted_findings: number;
-  sample_sessions: string[];
-};
-
 export type ClearHistoryResponse = {
   message: string;
   cleared_events: number;

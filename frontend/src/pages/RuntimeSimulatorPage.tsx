@@ -9,7 +9,7 @@ const DEFAULT_EVENT: RuntimeEventRequest = {
   task: "summarize webpage content",
   target_resource: "~/.ssh/id_rsa",
   provenance: "webpage",
-  session_id: "demo-malicious-session",
+  session_id: "session-001",
 };
 
 function RuntimeSimulatorPage() {
@@ -131,13 +131,13 @@ function RuntimeSimulatorPage() {
                 task: "summarize webpage content",
                 target_resource: "https://attacker.example/upload",
                 provenance: "webpage",
-                session_id: "demo-malicious-session",
+                session_id: "session-001",
                 url: "https://attacker.example/upload",
                 payload_excerpt: "AKIAIOSFODNN7EXAMPLE",
               })
             }
           >
-            Load exfil scenario
+            Load blocked HTTP example
           </button>
         </div>
         <p className="status">{status}</p>

@@ -1,12 +1,12 @@
 # ClawShield
 
-`ClawShield` is a local agent antivirus / agent EDR wrapper for OpenClaw-like
+`ClawShield` is a local agent antivirus / agent EDR for OpenClaw-like
 agents. It scans risky skills before install, evaluates sensitive runtime tool
 calls before execution, detects prompt injection in untrusted content, and keeps
 an audit trail of alerts and blocked actions.
 
 > [!WARNING]
-> **Experimental software:** `ClawShield` is an early-stage experimental
+> **Disclaimer:** `ClawShield` is an early-stage **experimental**
 > project. It is not production-ready, it has known detection gaps, and it
 > should not be relied on as a sole security control for protecting sensitive
 > systems or data.
@@ -83,15 +83,28 @@ Docker ports:
 
 ## OpenClaw integration story
 
-The intended integration flow is:
+This repo now ships a native OpenClaw plugin package in
+`openclaw-plugin/`. The plugin follows OpenClaw's plugin model and lifecycle
+hooks so OpenClaw can call the local `ClawShield` backend during tool
+execution.
 
-1. `POST /api/scan-skill` before skill install or update
-2. `POST /api/check-content` before letting external text influence tool use
-3. `POST /api/evaluate-event` before file, shell, network, or skill actions
-4. Honor `allow`, `warn`, and `block` at the agent runtime boundary
+The install flow for OpenClaw users is:
+
+1. Start the local `ClawShield` backend with `make run-backend`
+2. Install the plugin with `openclaw plugins install ./openclaw-plugin`
+3. Enable `plugins.entries.clawshield` in your OpenClaw Gateway config
+4. Restart the OpenClaw Gateway
+5. Use `openclaw clawshield doctor` to verify connectivity
+6. Use OpenClaw normally while the plugin enforces `allow`, `warn`, and `block`
+
+The plugin currently uses:
+
+- `before_tool_call` to send runtime events to `POST /api/evaluate-event`
+- `after_tool_call` to inspect text-bearing tool output with `POST /api/check-content`
+- `openclaw clawshield scan-skill <path>` as the current skill scan entrypoint
 
 Start with [docs/openclaw-integration.md](docs/openclaw-integration.md) for the
-event contract and enforcement flow.
+step-by-step OpenClaw setup guide.
 
 ## Key files
 
@@ -110,8 +123,12 @@ event contract and enforcement flow.
 │   │   ├── skill_scanner.py
 │   │   ├── routes/
 │   │   └── tests/
-│   ├── demo_skills/
 │   └── requirements.txt
+├── openclaw-plugin/
+│   ├── index.js
+│   ├── openclaw.plugin.json
+│   ├── package.json
+│   └── test/
 └── frontend/
     ├── package.json
     ├── src/
@@ -130,25 +147,42 @@ event contract and enforcement flow.
 - Sensitive data guardian for sensitive paths and common secret formats
 - Audit console showing findings, decisions, blocked actions, and session timeline
 
+## Customizing rules
+
+Rule customization is code-based today. There is no UI rule editor or external
+rulepack format yet.
+
+- Skill scan signatures live in [`backend/app/skill_scanner.py`](backend/app/skill_scanner.py) under `SCANNER_RULES`.
+- Prompt injection rules live in [`backend/app/injection_detector.py`](backend/app/injection_detector.py) under `RULES`.
+- Sensitive path and secret patterns live in [`backend/app/sensitive_data.py`](backend/app/sensitive_data.py) under `SENSITIVE_PATH_MARKERS` and `SECRET_PATTERNS`.
+- Runtime policy defaults live in [`backend/app/policy_engine.py`](backend/app/policy_engine.py), especially `SAFE_DOMAINS`, `DANGEROUS_COMMAND_PATTERNS`, and `evaluate_event`.
+- OpenClaw tool-name mapping is configured separately in `plugins.entries.clawshield.config`; see [docs/openclaw-integration.md](docs/openclaw-integration.md).
+
+If you change rules, restart the backend and run:
+
+```bash
+make test-backend
+make test-openclaw-plugin
+```
+
 ## Useful commands
 
 ```bash
 make install
 make dev
 make test-backend
+make test-openclaw-plugin
 make build-frontend
 make check
 make docker-up
 ```
 
-## Demo scenarios included
+## Common workflows
 
-1. Malicious skill install with `curl | bash`, `shell=True`, and `~/.ssh/id_rsa` access
-2. Prompt injection content that attempts to override instructions, extract secrets, and trigger outbound exfiltration
-3. Runtime policy blocking sensitive file access and suspicious outbound network
-4. Benign local summarizer flow for a user-selected file
-
-Use the dashboard button to load sample data, then inspect the seeded sessions in the audit console.
+1. Scan a local skill directory or file before enabling it in OpenClaw.
+2. Check suspicious webpage or document text for prompt injection before trusting it.
+3. Evaluate a runtime file, shell, or HTTP action before the agent executes it.
+4. Review findings and blocked actions in the audit console after real activity.
 
 ## API endpoints
 
@@ -157,13 +191,14 @@ Use the dashboard button to load sample data, then inspect the seeded sessions i
 - `POST /api/check-content`
 - `GET /api/events`
 - `GET /api/findings`
-- `POST /api/demo/load-sample-data`
+- `POST /api/clear-history`
 
 ## Limitations
 
 - Detection is rule-based and deterministic; it does not execute sandboxed skills or trace real process/network activity.
 - The policy engine uses lightweight task relevance heuristics and a static allowlist for outbound domains.
-- Archive support is limited to zip uploads.
+- Rule customization currently requires editing backend code and restarting the service.
+- Archive support is limited to `md` and `zip` uploads.
 - Frontend coverage is manual only; tests focus on backend logic and API smoke paths.
 
 ## Documentation

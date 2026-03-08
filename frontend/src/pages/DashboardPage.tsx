@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { clearHistory, getEvents, getFindings, loadDemoData } from "../api/client";
+import { clearHistory, getEvents, getFindings } from "../api/client";
 import EventTimeline from "../components/EventTimeline";
 import FindingsTable from "../components/FindingsTable";
 import StatCard from "../components/StatCard";
@@ -8,7 +8,7 @@ import type { EventRecord, FindingRecord } from "../types/api";
 function DashboardPage() {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [findings, setFindings] = useState<FindingRecord[]>([]);
-  const [status, setStatus] = useState("Load demo data to populate the audit timeline.");
+  const [status, setStatus] = useState("No audit history yet. Scans and policy checks will appear here.");
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
@@ -17,7 +17,11 @@ function DashboardPage() {
       const [eventsData, findingsData] = await Promise.all([getEvents(), getFindings()]);
       setEvents(eventsData);
       setFindings(findingsData);
-      setStatus("Audit trail refreshed.");
+      setStatus(
+        eventsData.length || findingsData.length
+          ? "Audit trail refreshed."
+          : "No audit history yet. Scans and policy checks will appear here.",
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to load dashboard data.");
     } finally {
@@ -28,18 +32,6 @@ function DashboardPage() {
   useEffect(() => {
     void refresh();
   }, []);
-
-  async function handleLoadDemo() {
-    setLoading(true);
-    try {
-      const result = await loadDemoData();
-      setStatus(result.message);
-      await refresh();
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to load sample data.");
-      setLoading(false);
-    }
-  }
 
   async function handleClearHistory() {
     const confirmed = window.confirm(
@@ -77,7 +69,6 @@ function DashboardPage() {
           <h2>Recent sessions, alerts, and blocked actions</h2>
         </div>
         <div className="actions">
-          <button onClick={() => void handleLoadDemo()}>Load demo data</button>
           <button className="button-secondary" onClick={() => void refresh()}>
             Refresh
           </button>

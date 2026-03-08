@@ -32,8 +32,8 @@ touch local files or outbound network tools.
 - The broker runs locally with the agent or on the same trusted workstation.
 - The integrating agent is willing to call the API before privileged actions.
 - Users want safe defaults even at the cost of some warning noise.
-- Demo policies are conservative and intentionally biased toward blocking obvious
-  secrets access and risky execution patterns.
+- Default policies are conservative and intentionally biased toward blocking
+  obvious secrets access and risky execution patterns.
 
 ## Non-goals
 
@@ -53,5 +53,6 @@ touch local files or outbound network tools.
 - Static skill scanning can miss heavily obfuscated or staged payloads
 - Path relevance checks are heuristic
 - Domain allowlisting is static
+- Rule customization still requires editing backend code
 - Frontend is an inspection UI, not an enforcement surface
 - There is no signed rulepack or attestation workflow yet

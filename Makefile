@@ -5,7 +5,7 @@ PYTEST := $(VENV)/bin/pytest
 UVICORN := $(VENV)/bin/uvicorn
 NPM := npm --cache $(CURDIR)/.npm-cache
 
-.PHONY: backend-install frontend-install install dev run-backend run-frontend test-backend build-frontend check docker-up docker-down
+.PHONY: backend-install frontend-install install test-openclaw-plugin dev run-backend run-frontend test-backend build-frontend check docker-up docker-down
 
 $(UVICORN): backend/requirements.txt
 	$(PYTHON) -m venv $(VENV)
@@ -19,6 +19,9 @@ backend-install: $(UVICORN)
 frontend-install: frontend/node_modules/.bin/vite
 
 install: backend-install frontend-install
+
+test-openclaw-plugin:
+	node --test openclaw-plugin/test/*.test.js
 
 dev: $(UVICORN) frontend/node_modules/.bin/vite
 	@trap 'kill $$backend_pid' EXIT INT TERM; \
@@ -38,7 +41,7 @@ test-backend: $(UVICORN)
 build-frontend: frontend/node_modules/.bin/vite
 	cd frontend && $(NPM) run build
 
-check: test-backend build-frontend
+check: test-backend test-openclaw-plugin build-frontend
 
 docker-up:
 	docker compose up --build
