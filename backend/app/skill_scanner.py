@@ -158,6 +158,11 @@ def _collect_scannable_files(path: Path) -> list[Path]:
     raise FileNotFoundError(f"Skill path is not a regular file or directory: {path}")
 
 
+
+
+def high_risk_findings(findings: list[ScanFinding]) -> list[ScanFinding]:
+    return [finding for finding in findings if finding.severity in {Severity.HIGH, Severity.CRITICAL}]
+
 def scan_skill_path(path: Path, scan_id: str, analysis_mode: str = "rules") -> SkillScanResponse:
     files_to_scan = _collect_scannable_files(path)
     findings: list[ScanFinding] = []

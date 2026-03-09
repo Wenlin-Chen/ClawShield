@@ -6,6 +6,7 @@ import type {
   PolicyDecisionResponse,
   RuntimeEventRequest,
   SkillScanAnalysisMode,
+  SkillSanitizeResponse,
   SkillScanResponse,
 } from "../types/api";
 
@@ -47,6 +48,16 @@ export function scanSkillUpload(file: File, analysisMode: SkillScanAnalysisMode 
   return request<SkillScanResponse>("/scan-skill", {
     method: "POST",
     body: formData,
+  });
+}
+
+
+
+export function sanitizeSkillPath(path: string, confirm = true): Promise<SkillSanitizeResponse> {
+  return request<SkillSanitizeResponse>("/sanitize-skill", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, confirm }),
   });
 }
 

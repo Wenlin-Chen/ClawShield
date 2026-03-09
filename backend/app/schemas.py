@@ -39,6 +39,20 @@ class SkillScanResponse(BaseModel):
     findings: list[ScanFinding] = Field(default_factory=list)
 
 
+class SkillSanitizeRequest(BaseModel):
+    path: str
+    confirm: bool = False
+
+
+class SkillSanitizeResponse(BaseModel):
+    scan_id: str
+    sanitized_path: str
+    removed_lines: int
+    skipped_findings: int
+    original_scan: SkillScanResponse
+    rescanned: SkillScanResponse
+
+
 class RuntimeEventRequest(BaseModel):
     event_type: EventType
     actor: str

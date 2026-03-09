@@ -22,10 +22,12 @@ from ..schemas import (
     FindingRecord,
     PolicyDecisionResponse,
     RuntimeEventRequest,
+    SkillSanitizeRequest,
+    SkillSanitizeResponse,
     SkillScanRequest,
     SkillScanResponse,
 )
-from ..skill_scanner import scan_skill_path
+from ..skill_scanner import high_risk_findings, scan_skill_path
 
 router = APIRouter(prefix="/api", tags=["security"])
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -155,6 +157,42 @@ def persist_policy_alert(event: RuntimeEventRequest, response: PolicyDecisionRes
     )
 
 
+def _remove_lines_from_file(file_path: Path, line_numbers: set[int]) -> int:
+    content = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    kept_lines: list[str] = []
+    removed = 0
+    for index, line in enumerate(content, start=1):
+        if index in line_numbers:
+            removed += 1
+            continue
+        kept_lines.append(line)
+    output = "\n".join(kept_lines)
+    if content:
+        output += "\n"
+    file_path.write_text(output, encoding="utf-8")
+    return removed
+
+
+def _sanitize_high_risk_lines(scan_result: SkillScanResponse) -> tuple[int, int]:
+    remove_map: dict[Path, set[int]] = {}
+    skipped = 0
+    for finding in high_risk_findings(scan_result.findings):
+        if finding.line_number is None:
+            skipped += 1
+            continue
+        file_path = Path(finding.file_path)
+        remove_map.setdefault(file_path, set()).add(finding.line_number)
+
+    removed = 0
+    for file_path, line_numbers in remove_map.items():
+        if not file_path.exists() or not file_path.is_file():
+            skipped += len(line_numbers)
+            continue
+        removed += _remove_lines_from_file(file_path, line_numbers)
+
+    return removed, skipped
+
+
 @router.post("/scan-skill", response_model=SkillScanResponse)
 async def scan_skill(
     request: Request,
@@ -210,6 +248,37 @@ async def scan_skill(
             result.scanned_path = safe_filename
         persist_scan_findings(result)
         return result
+
+
+@router.post("/sanitize-skill", response_model=SkillSanitizeResponse)
+def sanitize_skill(payload: SkillSanitizeRequest) -> SkillSanitizeResponse:
+    if not payload.confirm:
+        raise HTTPException(status_code=400, detail="Set confirm=true to remove high-risk lines.")
+
+    resolved = _validate_scan_path(Path(payload.path))
+    scan_id = f"sanitize-{uuid4().hex[:8]}"
+
+    try:
+        original_scan = scan_skill_path(resolved, scan_id=f"{scan_id}-before", analysis_mode="rules")
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    removed_lines, skipped_findings = _sanitize_high_risk_lines(original_scan)
+
+    try:
+        rescanned = scan_skill_path(resolved, scan_id=f"{scan_id}-after", analysis_mode="rules")
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    persist_scan_findings(rescanned)
+    return SkillSanitizeResponse(
+        scan_id=scan_id,
+        sanitized_path=str(resolved),
+        removed_lines=removed_lines,
+        skipped_findings=skipped_findings,
+        original_scan=original_scan,
+        rescanned=rescanned,
+    )
 
 
 @router.post("/evaluate-event", response_model=PolicyDecisionResponse)
