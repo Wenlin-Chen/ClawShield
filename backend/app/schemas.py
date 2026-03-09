@@ -24,9 +24,13 @@ class ScanFinding(BaseModel):
 
 class SkillScanRequest(BaseModel):
     path: str | None = None
+    analysis_mode: str = "rules"
 
 
 class SkillScanResponse(BaseModel):
+    analysis_mode: str = "rules"
+    analysis_summary: str | None = None
+
     scan_id: str
     scanned_path: str
     scanned_files: int

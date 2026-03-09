@@ -6,6 +6,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from app.models import Recommendation, Severity
+from app.schemas import ScanFinding
+
 
 def test_scan_skill_endpoint(client: TestClient, tmp_path: Path) -> None:
     skill_dir = tmp_path / "malicious"
@@ -54,6 +57,54 @@ def test_scan_uploaded_single_skill_file(client: TestClient) -> None:
     body = response.json()
     assert body["scanned_path"] == "skill.py"
     assert body["recommendation"] == "block"
+
+
+def test_scan_skill_openclaw_agent_mode(client: TestClient, tmp_path: Path, monkeypatch) -> None:
+    skill_file = tmp_path / "skill.py"
+    skill_file.write_text("print('hello')\n", encoding="utf-8")
+
+    def _fake_agent(_files):
+        return (
+            Recommendation.WARN,
+            [
+                ScanFinding(
+                    category="openclaw_agent",
+                    severity=Severity.HIGH,
+                    title="Potential hidden payload",
+                    evidence="dynamic import chain",
+                    file_path=str(skill_file),
+                    line_number=1,
+                    score=25,
+                )
+            ],
+            "OpenCLAW agent found suspicious control flow.",
+        )
+
+    monkeypatch.setattr("app.skill_scanner.analyze_with_openclaw", _fake_agent)
+
+    response = client.post(
+        "/api/scan-skill",
+        json={"path": str(skill_file), "analysis_mode": "openclaw_agent"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["analysis_mode"] == "openclaw_agent"
+    assert body["analysis_summary"] == "OpenCLAW agent found suspicious control flow."
+    assert body["recommendation"] == "warn"
+
+
+def test_scan_skill_openclaw_agent_requires_configuration(client: TestClient, tmp_path: Path) -> None:
+    skill_file = tmp_path / "skill.py"
+    skill_file.write_text("print('hello')\n", encoding="utf-8")
+
+    response = client.post(
+        "/api/scan-skill",
+        json={"path": str(skill_file), "analysis_mode": "openclaw_agent"},
+    )
+
+    assert response.status_code == 400
+    assert "OPENCLAW_AGENT_URL" in response.text
 
 
 def test_scan_skill_path_rejects_outside_allowed_roots(client: TestClient, tmp_path: Path) -> None:

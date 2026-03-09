@@ -7,7 +7,7 @@ import zipfile
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
 from .. import db
 from ..injection_detector import analyze_content
@@ -160,6 +160,7 @@ async def scan_skill(
     request: Request,
     upload: UploadFile | None = File(default=None),
     archive: UploadFile | None = File(default=None),
+    analysis_mode: str = Form(default="rules"),
 ) -> SkillScanResponse:
     content_type = request.headers.get("content-type", "")
     scan_id = f"scan-{uuid4().hex[:8]}"
@@ -168,12 +169,18 @@ async def scan_skill(
         body = SkillScanRequest.model_validate(await request.json())
         if not body.path:
             raise HTTPException(status_code=400, detail="JSON request must include path.")
+        mode = body.analysis_mode or "rules"
+        if mode not in {"rules", "openclaw_agent"}:
+            raise HTTPException(status_code=400, detail="analysis_mode must be one of: rules, openclaw_agent")
         try:
-            result = scan_skill_path(_validate_scan_path(Path(body.path)), scan_id=scan_id)
-        except ValueError as exc:
+            result = scan_skill_path(_validate_scan_path(Path(body.path)), scan_id=scan_id, analysis_mode=mode)
+        except (ValueError, RuntimeError) as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         persist_scan_findings(result)
         return result
+
+    if analysis_mode not in {"rules", "openclaw_agent"}:
+        raise HTTPException(status_code=400, detail="analysis_mode must be one of: rules, openclaw_agent")
 
     incoming_file = upload or archive
     if incoming_file is None:
@@ -191,14 +198,14 @@ async def scan_skill(
             extract_root = Path(temp_dir) / "extracted"
             _extract_zip_safely(upload_path, extract_root)
             try:
-                result = scan_skill_path(extract_root, scan_id=scan_id)
-            except ValueError as exc:
+                result = scan_skill_path(extract_root, scan_id=scan_id, analysis_mode=analysis_mode)
+            except (ValueError, RuntimeError) as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             result.scanned_path = safe_filename
         else:
             try:
-                result = scan_skill_path(upload_path, scan_id=scan_id)
-            except ValueError as exc:
+                result = scan_skill_path(upload_path, scan_id=scan_id, analysis_mode=analysis_mode)
+            except (ValueError, RuntimeError) as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             result.scanned_path = safe_filename
         persist_scan_findings(result)
