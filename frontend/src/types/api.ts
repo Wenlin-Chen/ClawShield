@@ -97,3 +97,13 @@ export type ClearHistoryResponse = {
   cleared_events: number;
   cleared_findings: number;
 };
+
+
+export type SkillSanitizeResponse = {
+  scan_id: string;
+  sanitized_path: string;
+  removed_lines: number;
+  skipped_findings: number;
+  original_scan: SkillScanResponse;
+  rescanned: SkillScanResponse;
+};

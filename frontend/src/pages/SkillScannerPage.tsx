@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { scanSkillByPath, scanSkillUpload } from "../api/client";
+import { sanitizeSkillPath, scanSkillByPath, scanSkillUpload } from "../api/client";
 import DecisionBadge from "../components/DecisionBadge";
 import FindingsTable from "../components/FindingsTable";
 import type { SkillScanAnalysisMode, SkillScanResponse } from "../types/api";
@@ -14,6 +14,7 @@ function SkillScannerPage() {
   const [status, setStatus] = useState(
     "Scan a local skill directory, a single skill file, or upload a zip or skill file.",
   );
+  const [sanitizeConfirmed, setSanitizeConfirmed] = useState(false);
 
   useEffect(() => {
     const savedPath = window.localStorage.getItem(SAVED_SKILL_PATH_KEY);
@@ -21,6 +22,29 @@ function SkillScannerPage() {
       setPath(savedPath);
     }
   }, []);
+
+
+  async function handleSanitize() {
+    if (!result || !path.trim()) {
+      setStatus("Run a path-based scan before sanitizing risky lines.");
+      return;
+    }
+    if (!sanitizeConfirmed) {
+      setStatus("Confirm removal before sanitizing high-risk findings.");
+      return;
+    }
+
+    setStatus("Removing high-risk lines and rescanning...");
+    try {
+      const response = await sanitizeSkillPath(path.trim(), true);
+      setResult(response.rescanned);
+      setStatus(
+        `Removed ${response.removed_lines} high-risk line(s). Skipped ${response.skipped_findings} finding(s) without exact line numbers.`,
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Sanitization failed.");
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +67,8 @@ function SkillScannerPage() {
       setStatus(error instanceof Error ? error.message : "Scan failed.");
     }
   }
+
+  const highRiskFindings = result?.findings.filter((finding) => finding.severity === "high" || finding.severity === "critical") ?? [];
 
   return (
     <section className="page">
@@ -85,6 +111,7 @@ function SkillScannerPage() {
             onClick={() => {
               setUpload(null);
               setPath("");
+              setSanitizeConfirmed(false);
               window.localStorage.removeItem(SAVED_SKILL_PATH_KEY);
               setStatus("Cleared the current scanner inputs and saved path.");
             }}
@@ -92,6 +119,21 @@ function SkillScannerPage() {
             Clear input
           </button>
         </div>
+        {result && !upload && highRiskFindings.length > 0 ? (
+          <div className="stack">
+            <label>
+              <input
+                type="checkbox"
+                checked={sanitizeConfirmed}
+                onChange={(event) => setSanitizeConfirmed(event.target.checked)}
+              />
+              I reviewed the high-risk findings and want ClawShield to remove matching lines.
+            </label>
+            <button className="button-secondary" type="button" onClick={handleSanitize}>
+              Remove high-risk lines
+            </button>
+          </div>
+        ) : null}
         <p className="status">{status}</p>
       </form>
 
