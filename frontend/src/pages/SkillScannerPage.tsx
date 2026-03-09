@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { scanSkillByPath, scanSkillUpload } from "../api/client";
 import DecisionBadge from "../components/DecisionBadge";
 import FindingsTable from "../components/FindingsTable";
-import type { SkillScanResponse } from "../types/api";
+import type { SkillScanAnalysisMode, SkillScanResponse } from "../types/api";
 
 const SAVED_SKILL_PATH_KEY = "clawshield:last-skill-path";
 
@@ -10,6 +10,7 @@ function SkillScannerPage() {
   const [path, setPath] = useState("");
   const [upload, setUpload] = useState<File | null>(null);
   const [result, setResult] = useState<SkillScanResponse | null>(null);
+  const [analysisMode, setAnalysisMode] = useState<SkillScanAnalysisMode>("rules");
   const [status, setStatus] = useState(
     "Scan a local skill directory, a single skill file, or upload a zip or skill file.",
   );
@@ -30,7 +31,9 @@ function SkillScannerPage() {
     setStatus("Scanning skill...");
     try {
       const normalizedPath = path.trim();
-      const response = upload ? await scanSkillUpload(upload) : await scanSkillByPath(normalizedPath);
+      const response = upload
+        ? await scanSkillUpload(upload, analysisMode)
+        : await scanSkillByPath(normalizedPath, analysisMode);
       setResult(response);
       setStatus(`Scan complete for ${response.scanned_path}.`);
       if (!upload && normalizedPath) {
@@ -58,6 +61,13 @@ function SkillScannerPage() {
             value={path}
             onChange={(event) => setPath(event.target.value)}
           />
+        </label>
+        <label>
+          Analysis mode
+          <select value={analysisMode} onChange={(event) => setAnalysisMode(event.target.value as SkillScanAnalysisMode)}>
+            <option value="rules">Fixed rules (default)</option>
+            <option value="openclaw_agent">OpenCLAW agent review</option>
+          </select>
         </label>
         <label>
           Or upload a zip archive or individual skill file
@@ -98,6 +108,8 @@ function SkillScannerPage() {
             </div>
           </div>
           <p>Scanned files: {result.scanned_files}</p>
+          <p>Analysis mode: {result.analysis_mode}</p>
+          {result.analysis_summary ? <p>{result.analysis_summary}</p> : null}
           <FindingsTable findings={result.findings} />
         </section>
       ) : null}

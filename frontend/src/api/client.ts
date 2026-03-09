@@ -5,6 +5,7 @@ import type {
   FindingRecord,
   PolicyDecisionResponse,
   RuntimeEventRequest,
+  SkillScanAnalysisMode,
   SkillScanResponse,
 } from "../types/api";
 
@@ -31,17 +32,18 @@ export function clearHistory(): Promise<ClearHistoryResponse> {
   return request<ClearHistoryResponse>("/clear-history", { method: "POST" });
 }
 
-export function scanSkillByPath(path: string): Promise<SkillScanResponse> {
+export function scanSkillByPath(path: string, analysisMode: SkillScanAnalysisMode = "rules"): Promise<SkillScanResponse> {
   return request<SkillScanResponse>("/scan-skill", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path }),
+    body: JSON.stringify({ path, analysis_mode: analysisMode }),
   });
 }
 
-export function scanSkillUpload(file: File): Promise<SkillScanResponse> {
+export function scanSkillUpload(file: File, analysisMode: SkillScanAnalysisMode = "rules"): Promise<SkillScanResponse> {
   const formData = new FormData();
   formData.append("upload", file);
+  formData.append("analysis_mode", analysisMode);
   return request<SkillScanResponse>("/scan-skill", {
     method: "POST",
     body: formData,

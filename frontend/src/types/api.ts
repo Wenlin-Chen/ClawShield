@@ -1,6 +1,7 @@
 export type Decision = "allow" | "warn" | "block";
 export type Severity = "low" | "medium" | "high" | "critical";
 export type Recommendation = "allow" | "warn" | "block";
+export type SkillScanAnalysisMode = "rules" | "openclaw_agent";
 
 export type ScanFinding = {
   category: string;
@@ -13,6 +14,8 @@ export type ScanFinding = {
 };
 
 export type SkillScanResponse = {
+  analysis_mode: SkillScanAnalysisMode;
+  analysis_summary: string | null;
   scan_id: string;
   scanned_path: string;
   scanned_files: number;

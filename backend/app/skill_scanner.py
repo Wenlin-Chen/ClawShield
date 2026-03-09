@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .models import Recommendation, Severity
+from .openclaw_agent import analyze_with_openclaw
 from .schemas import ScanFinding, SkillScanResponse
 from .sensitive_data import SENSITIVE_SOURCE_MARKERS
 
@@ -157,16 +158,22 @@ def _collect_scannable_files(path: Path) -> list[Path]:
     raise FileNotFoundError(f"Skill path is not a regular file or directory: {path}")
 
 
-def scan_skill_path(path: Path, scan_id: str) -> SkillScanResponse:
+def scan_skill_path(path: Path, scan_id: str, analysis_mode: str = "rules") -> SkillScanResponse:
     files_to_scan = _collect_scannable_files(path)
     findings: list[ScanFinding] = []
+    summary: str | None = None
 
-    for file_path in files_to_scan:
-        _scan_file(file_path, findings)
+    if analysis_mode == "openclaw_agent":
+        recommendation, findings, summary = analyze_with_openclaw(files_to_scan)
+    else:
+        for file_path in files_to_scan:
+            _scan_file(file_path, findings)
+        recommendation = _risk_recommendation(min(sum(finding.score for finding in findings), 100), findings)
 
     score = min(sum(finding.score for finding in findings), 100)
-    recommendation = _risk_recommendation(score, findings)
     return SkillScanResponse(
+        analysis_mode=analysis_mode,
+        analysis_summary=summary,
         scan_id=scan_id,
         scanned_path=str(path),
         scanned_files=len(files_to_scan),
@@ -176,5 +183,5 @@ def scan_skill_path(path: Path, scan_id: str) -> SkillScanResponse:
     )
 
 
-def scan_skill_directory(path: Path, scan_id: str) -> SkillScanResponse:
-    return scan_skill_path(path, scan_id=scan_id)
+def scan_skill_directory(path: Path, scan_id: str, analysis_mode: str = "rules") -> SkillScanResponse:
+    return scan_skill_path(path, scan_id=scan_id, analysis_mode=analysis_mode)
