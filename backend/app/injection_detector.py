@@ -57,6 +57,22 @@ RULES = [
         weight=15,
         pattern=re.compile(r"(?is)\byou must\b.{0,40}\bignore safety\b"),
     ),
+    InjectionRule(
+        label="Token burn loop coercion",
+        flag="resource exhaustion attempt",
+        weight=20,
+        pattern=re.compile(
+            r"(?is)\b(?:prove|proof|repeat|continue|loop)\b.{0,120}\b(?:until|forever|all)\b.{0,80}\btoken" 
+        ),
+    ),
+    InjectionRule(
+        label="Destructive action coercion",
+        flag="destructive action attempt",
+        weight=30,
+        pattern=re.compile(
+            r"(?is)\b(?:delete|wipe|destroy|remove)\b.{0,120}\b(?:files?|system|database|repo|everything|/)\b"
+        ),
+    ),
 ]
 
 

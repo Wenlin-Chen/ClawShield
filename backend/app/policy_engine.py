@@ -23,6 +23,32 @@ DANGEROUS_COMMAND_PATTERNS = [
 ]
 
 
+MALICIOUS_INSTRUCTION_PATTERNS = [
+    (
+        "prompt-burn-token-loop",
+        re.compile(r"(?is)\b(?:prove|proof|repeat|continue|loop)\b.{0,120}\b(?:until|forever|all)\b.{0,80}\btoken"),
+    ),
+    (
+        "destructive-instruction",
+        re.compile(r"(?is)\b(?:delete|remove|wipe|destroy)\b.{0,120}\b(?:files?|system|database|repo|everything|/)\b"),
+    ),
+    (
+        "override-safety-online",
+        re.compile(r"(?is)\b(?:ignore|override|bypass)\b.{0,100}\b(?:safety|policy|guardrail|instruction)s?\b"),
+    ),
+]
+
+
+def detect_malicious_instruction_signals(text: str) -> list[str]:
+    hits: list[str] = []
+    lowered = text.strip()
+    if not lowered:
+        return hits
+    for rule_name, pattern in MALICIOUS_INSTRUCTION_PATTERNS:
+        if pattern.search(lowered):
+            hits.append(rule_name)
+    return hits
+
 def strictest(current: Decision, candidate: Decision) -> Decision:
     return candidate if DECISION_ORDER[candidate] > DECISION_ORDER[current] else current
 
@@ -64,6 +90,13 @@ def evaluate_event(event: RuntimeEventRequest) -> PolicyDecisionResponse:
     matched_rules: list[str] = []
     context = get_session_context(event.session_id)
 
+    monitor_text = "\n".join(filter(None, [event.task, event.command, event.payload_excerpt]))
+    monitor_hits = detect_malicious_instruction_signals(monitor_text)
+    if monitor_hits:
+        decision = strictest(decision, Decision.WARN)
+        reasons.append("Lightweight monitor detected potentially malicious online instruction patterns.")
+        matched_rules.extend(monitor_hits)
+
     if event.event_type in {EventType.FILE_READ, EventType.FILE_WRITE}:
         sensitive_labels = match_sensitive_path(event.target_resource)
         if sensitive_labels:
@@ -83,6 +116,12 @@ def evaluate_event(event: RuntimeEventRequest) -> PolicyDecisionResponse:
                 reasons.append("Shell command matches a high-risk execution pattern.")
                 matched_rules.append(rule_name)
                 break
+
+    if monitor_hits and event.event_type in {EventType.SHELL_EXEC, EventType.HTTP_REQUEST, EventType.SEND_MESSAGE}:
+        decision = strictest(decision, Decision.BLOCK)
+        reasons.append("Execution/egress blocked because monitor flagged possible instruction hijack.")
+        if "block-after-monitor-hit" not in matched_rules:
+            matched_rules.append("block-after-monitor-hit")
 
     if event.event_type in {EventType.HTTP_REQUEST, EventType.SEND_MESSAGE}:
         domain = extract_domain(event)

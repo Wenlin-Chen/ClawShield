@@ -15,6 +15,7 @@ function FindingsTable({ findings }: FindingsTableProps) {
             <th>Severity</th>
             <th>Category</th>
             <th>Evidence</th>
+            <th>Marked removable</th>
           </tr>
         </thead>
         <tbody>
@@ -26,6 +27,7 @@ function FindingsTable({ findings }: FindingsTableProps) {
               </td>
               <td>{finding.category}</td>
               <td className="mono">{finding.evidence}</td>
+              <td>{"removable" in finding && finding.removable ? "Yes" : "No"}</td>
             </tr>
           ))}
         </tbody>

@@ -33,7 +33,7 @@ export function clearHistory(): Promise<ClearHistoryResponse> {
   return request<ClearHistoryResponse>("/clear-history", { method: "POST" });
 }
 
-export function scanSkillByPath(path: string, analysisMode: SkillScanAnalysisMode = "rules"): Promise<SkillScanResponse> {
+export function scanSkillByPath(path: string, analysisMode: SkillScanAnalysisMode = "rule_mode"): Promise<SkillScanResponse> {
   return request<SkillScanResponse>("/scan-skill", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -41,7 +41,7 @@ export function scanSkillByPath(path: string, analysisMode: SkillScanAnalysisMod
   });
 }
 
-export function scanSkillUpload(file: File, analysisMode: SkillScanAnalysisMode = "rules"): Promise<SkillScanResponse> {
+export function scanSkillUpload(file: File, analysisMode: SkillScanAnalysisMode = "rule_mode"): Promise<SkillScanResponse> {
   const formData = new FormData();
   formData.append("upload", file);
   formData.append("analysis_mode", analysisMode);

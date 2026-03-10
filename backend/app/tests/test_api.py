@@ -22,8 +22,10 @@ def test_scan_skill_endpoint(client: TestClient, tmp_path: Path) -> None:
 
     assert response.status_code == 200
     body = response.json()
+    assert body["analysis_mode"] == "rule_mode"
     assert body["recommendation"] == "block"
     assert body["findings"]
+    assert any(finding["removable"] for finding in body["findings"])
 
 
 def test_scan_single_skill_file_by_path(client: TestClient, tmp_path: Path) -> None:
@@ -84,12 +86,12 @@ def test_scan_skill_openclaw_agent_mode(client: TestClient, tmp_path: Path, monk
 
     response = client.post(
         "/api/scan-skill",
-        json={"path": str(skill_file), "analysis_mode": "openclaw_agent"},
+        json={"path": str(skill_file), "analysis_mode": "agent_mode"},
     )
 
     assert response.status_code == 200
     body = response.json()
-    assert body["analysis_mode"] == "openclaw_agent"
+    assert body["analysis_mode"] == "agent_mode"
     assert body["analysis_summary"] == "OpenCLAW agent found suspicious control flow."
     assert body["recommendation"] == "warn"
 
@@ -100,7 +102,7 @@ def test_scan_skill_openclaw_agent_requires_configuration(client: TestClient, tm
 
     response = client.post(
         "/api/scan-skill",
-        json={"path": str(skill_file), "analysis_mode": "openclaw_agent"},
+        json={"path": str(skill_file), "analysis_mode": "agent_mode"},
     )
 
     assert response.status_code == 400
