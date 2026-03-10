@@ -163,21 +163,43 @@ def _collect_scannable_files(path: Path) -> list[Path]:
 def high_risk_findings(findings: list[ScanFinding]) -> list[ScanFinding]:
     return [finding for finding in findings if finding.severity in {Severity.HIGH, Severity.CRITICAL}]
 
-def scan_skill_path(path: Path, scan_id: str, analysis_mode: str = "rules") -> SkillScanResponse:
+
+def normalize_analysis_mode(analysis_mode: str) -> str:
+    normalized = analysis_mode.strip().lower()
+    if normalized in {"rule_mode", "rules"}:
+        return "rule_mode"
+    if normalized in {"agent_mode", "openclaw_agent"}:
+        return "agent_mode"
+    raise ValueError("analysis_mode must be one of: rule_mode, agent_mode")
+
+
+def _annotate_remediation(findings: list[ScanFinding]) -> None:
+    for finding in findings:
+        finding.removable = finding.line_number is not None and finding.severity in {
+            Severity.HIGH,
+            Severity.CRITICAL,
+        }
+        if finding.removable:
+            finding.remediation_hint = "Review and optionally remove this line from the skill."
+
+
+def scan_skill_path(path: Path, scan_id: str, analysis_mode: str = "rule_mode") -> SkillScanResponse:
+    mode = normalize_analysis_mode(analysis_mode)
     files_to_scan = _collect_scannable_files(path)
     findings: list[ScanFinding] = []
     summary: str | None = None
 
-    if analysis_mode == "openclaw_agent":
+    if mode == "agent_mode":
         recommendation, findings, summary = analyze_with_openclaw(files_to_scan)
     else:
         for file_path in files_to_scan:
             _scan_file(file_path, findings)
         recommendation = _risk_recommendation(min(sum(finding.score for finding in findings), 100), findings)
 
+    _annotate_remediation(findings)
     score = min(sum(finding.score for finding in findings), 100)
     return SkillScanResponse(
-        analysis_mode=analysis_mode,
+        analysis_mode=mode,
         analysis_summary=summary,
         scan_id=scan_id,
         scanned_path=str(path),
@@ -188,5 +210,5 @@ def scan_skill_path(path: Path, scan_id: str, analysis_mode: str = "rules") -> S
     )
 
 
-def scan_skill_directory(path: Path, scan_id: str, analysis_mode: str = "rules") -> SkillScanResponse:
+def scan_skill_directory(path: Path, scan_id: str, analysis_mode: str = "rule_mode") -> SkillScanResponse:
     return scan_skill_path(path, scan_id=scan_id, analysis_mode=analysis_mode)

@@ -27,7 +27,7 @@ from ..schemas import (
     SkillScanRequest,
     SkillScanResponse,
 )
-from ..skill_scanner import high_risk_findings, scan_skill_path
+from ..skill_scanner import high_risk_findings, normalize_analysis_mode, scan_skill_path
 
 router = APIRouter(prefix="/api", tags=["security"])
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -198,7 +198,7 @@ async def scan_skill(
     request: Request,
     upload: UploadFile | None = File(default=None),
     archive: UploadFile | None = File(default=None),
-    analysis_mode: str = Form(default="rules"),
+    analysis_mode: str = Form(default="rule_mode"),
 ) -> SkillScanResponse:
     content_type = request.headers.get("content-type", "")
     scan_id = f"scan-{uuid4().hex[:8]}"
@@ -207,18 +207,18 @@ async def scan_skill(
         body = SkillScanRequest.model_validate(await request.json())
         if not body.path:
             raise HTTPException(status_code=400, detail="JSON request must include path.")
-        mode = body.analysis_mode or "rules"
-        if mode not in {"rules", "openclaw_agent"}:
-            raise HTTPException(status_code=400, detail="analysis_mode must be one of: rules, openclaw_agent")
         try:
+            mode = normalize_analysis_mode(body.analysis_mode or "rule_mode")
             result = scan_skill_path(_validate_scan_path(Path(body.path)), scan_id=scan_id, analysis_mode=mode)
         except (ValueError, RuntimeError) as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         persist_scan_findings(result)
         return result
 
-    if analysis_mode not in {"rules", "openclaw_agent"}:
-        raise HTTPException(status_code=400, detail="analysis_mode must be one of: rules, openclaw_agent")
+    try:
+        mode = normalize_analysis_mode(analysis_mode)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     incoming_file = upload or archive
     if incoming_file is None:
@@ -236,13 +236,13 @@ async def scan_skill(
             extract_root = Path(temp_dir) / "extracted"
             _extract_zip_safely(upload_path, extract_root)
             try:
-                result = scan_skill_path(extract_root, scan_id=scan_id, analysis_mode=analysis_mode)
+                result = scan_skill_path(extract_root, scan_id=scan_id, analysis_mode=mode)
             except (ValueError, RuntimeError) as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             result.scanned_path = safe_filename
         else:
             try:
-                result = scan_skill_path(upload_path, scan_id=scan_id, analysis_mode=analysis_mode)
+                result = scan_skill_path(upload_path, scan_id=scan_id, analysis_mode=mode)
             except (ValueError, RuntimeError) as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             result.scanned_path = safe_filename
@@ -259,14 +259,14 @@ def sanitize_skill(payload: SkillSanitizeRequest) -> SkillSanitizeResponse:
     scan_id = f"sanitize-{uuid4().hex[:8]}"
 
     try:
-        original_scan = scan_skill_path(resolved, scan_id=f"{scan_id}-before", analysis_mode="rules")
+        original_scan = scan_skill_path(resolved, scan_id=f"{scan_id}-before", analysis_mode="rule_mode")
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     removed_lines, skipped_findings = _sanitize_high_risk_lines(original_scan)
 
     try:
-        rescanned = scan_skill_path(resolved, scan_id=f"{scan_id}-after", analysis_mode="rules")
+        rescanned = scan_skill_path(resolved, scan_id=f"{scan_id}-after", analysis_mode="rule_mode")
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

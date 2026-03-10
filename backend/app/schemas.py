@@ -20,15 +20,17 @@ class ScanFinding(BaseModel):
     file_path: str
     line_number: int | None = None
     score: int = 0
+    removable: bool = False
+    remediation_hint: str | None = None
 
 
 class SkillScanRequest(BaseModel):
     path: str | None = None
-    analysis_mode: str = "rules"
+    analysis_mode: str = "rule_mode"
 
 
 class SkillScanResponse(BaseModel):
-    analysis_mode: str = "rules"
+    analysis_mode: str = "rule_mode"
     analysis_summary: str | None = None
 
     scan_id: str

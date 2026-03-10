@@ -10,7 +10,7 @@ function SkillScannerPage() {
   const [path, setPath] = useState("");
   const [upload, setUpload] = useState<File | null>(null);
   const [result, setResult] = useState<SkillScanResponse | null>(null);
-  const [analysisMode, setAnalysisMode] = useState<SkillScanAnalysisMode>("rules");
+  const [analysisMode, setAnalysisMode] = useState<SkillScanAnalysisMode>("rule_mode");
   const [status, setStatus] = useState(
     "Scan a local skill directory, a single skill file, or upload a zip or skill file.",
   );
@@ -91,8 +91,8 @@ function SkillScannerPage() {
         <label>
           Analysis mode
           <select value={analysisMode} onChange={(event) => setAnalysisMode(event.target.value as SkillScanAnalysisMode)}>
-            <option value="rules">Fixed rules (default)</option>
-            <option value="openclaw_agent">OpenCLAW agent review</option>
+            <option value="rule_mode">Rule mode (deterministic signatures)</option>
+            <option value="agent_mode">Agent mode (LLM reviewer)</option>
           </select>
         </label>
         <label>

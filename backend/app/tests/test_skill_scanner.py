@@ -23,6 +23,7 @@ def test_scanner_blocks_malicious_skill(tmp_path: Path) -> None:
     assert result.recommendation == "block"
     assert result.score >= 70
     assert any("Downloads and executes remote script" == finding.title for finding in result.findings)
+    assert any(finding.removable for finding in result.findings if finding.line_number is not None)
 
 
 def test_scanner_allows_benign_skill(tmp_path: Path) -> None:
