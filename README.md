@@ -146,7 +146,8 @@ step-by-step OpenClaw setup guide.
 ## Features
 
 - Skill scanner for risky code patterns such as `curl | bash`, `shell=True`, `os.system`, base64 decode plus execution, sensitive path access, and outbound HTTP calls
-- Optional agent mode (OpenCLAW-powered) for contextual malware analysis across skill files
+- Two scan analysis modes: default `rule_mode` plus optional `agent_mode` (OpenCLAW-powered) for contextual malware analysis across skill files
+- High/critical finding lines are marked as `removable` with a remediation hint so users can decide whether to remove flagged code
 - Runtime policy broker for `file_read`, `file_write`, `shell_exec`, `http_request`, `send_message`, and `skill_install`
 - Lightweight monitor checks online instructions for coercion patterns (token burn loops, destructive actions, safety bypass prompts) before execution and egress
 - Prompt injection firewall with rule-based scoring and flagging
@@ -159,7 +160,8 @@ Rule customization is code-based today for fixed signatures. There is no UI rule
 rulepack format yet.
 
 - Skill scan signatures live in [`backend/app/skill_scanner.py`](backend/app/skill_scanner.py) under `SCANNER_RULES`.
-- Skill path and upload scans also support `analysis_mode: "agent_mode"` to run an LLM-backed review (requires `OPENCLAW_AGENT_URL` and `OPENCLAW_AGENT_MODEL`, plus optional `OPENCLAW_AGENT_API_KEY`).
+- Skill path and upload scans default to `analysis_mode: "rule_mode"`; set `analysis_mode: "agent_mode"` for LLM-backed review (requires `OPENCLAW_AGENT_URL` and `OPENCLAW_AGENT_MODEL`, plus optional `OPENCLAW_AGENT_API_KEY`).
+- Legacy aliases (`rules`, `openclaw_agent`) are still accepted and normalized for backwards compatibility.
 - Prompt injection rules live in [`backend/app/injection_detector.py`](backend/app/injection_detector.py) under `RULES`.
 - Sensitive path and secret patterns live in [`backend/app/sensitive_data.py`](backend/app/sensitive_data.py) under `SENSITIVE_PATH_MARKERS` and `SECRET_PATTERNS`.
 - Runtime policy defaults live in [`backend/app/policy_engine.py`](backend/app/policy_engine.py), especially `SAFE_DOMAINS`, `DANGEROUS_COMMAND_PATTERNS`, and `evaluate_event`.
@@ -192,9 +194,17 @@ make docker-up
 3. Evaluate a runtime file, shell, or HTTP action before the agent executes it.
 4. Review findings and blocked actions in the audit console after real activity.
 
+## Skill scan modes and optional sanitize flow
+
+- `rule_mode` (default): deterministic rule matching over supported text files.
+- `agent_mode`: delegates file set analysis to OpenClaw for contextual reasoning.
+- Finding metadata includes `removable` and `remediation_hint`; high/critical line-level findings are intentionally marked so a user can review and decide whether to delete those lines.
+- If you want automatic removal after review, call `POST /api/sanitize-skill` with `confirm: true`. This removes high-risk line-level findings in-place and returns before/after rescans.
+
 ## API endpoints
 
 - `POST /api/scan-skill`
+- `POST /api/sanitize-skill`
 - `POST /api/evaluate-event`
 - `POST /api/check-content`
 - `GET /api/events`
