@@ -1,0 +1,33 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" rx="24" fill="#EEF4FB"/>
+  <rect x="32" y="32" width="1216" height="656" rx="20" fill="#FFFFFF"/>
+  <rect x="64" y="64" width="248" height="592" rx="20" fill="#0A2145"/>
+  <text x="92" y="114" fill="white" font-family="Arial" font-size="22" font-weight="700">ClawShield</text>
+  <rect x="92" y="184" width="192" height="42" rx="12" fill="#1F6FEB"/>
+  <text x="120" y="211" fill="white" font-family="Arial" font-size="15">Dashboard</text>
+  <rect x="92" y="238" width="192" height="42" rx="12" fill="#11315F"/>
+  <text x="120" y="265" fill="white" font-family="Arial" font-size="15">Skill Scanner</text>
+  <rect x="92" y="292" width="192" height="42" rx="12" fill="#11315F"/>
+  <text x="120" y="319" fill="white" font-family="Arial" font-size="15">Runtime Broker</text>
+
+  <text x="352" y="108" fill="#5C677D" font-family="Arial" font-size="12" letter-spacing="1.5">DASHBOARD</text>
+  <text x="352" y="146" fill="#14213D" font-family="Arial" font-size="34" font-weight="700">Overview of risk posture at a glance</text>
+
+  <rect x="352" y="180" width="270" height="126" rx="18" fill="#F7FAFF" stroke="#D7E3F5"/>
+  <text x="378" y="224" fill="#5C677D" font-family="Arial" font-size="15">Stored events</text>
+  <text x="378" y="278" fill="#14213D" font-family="Arial" font-size="40" font-weight="700">31</text>
+
+  <rect x="642" y="180" width="270" height="126" rx="18" fill="#FFF6F7" stroke="#F1CCD4"/>
+  <text x="668" y="224" fill="#7E4352" font-family="Arial" font-size="15">Blocked actions</text>
+  <text x="668" y="278" fill="#A51431" font-family="Arial" font-size="40" font-weight="700">9</text>
+
+  <rect x="932" y="180" width="270" height="126" rx="18" fill="#FFF9EE" stroke="#F3DEC0"/>
+  <text x="958" y="224" fill="#7A5B1F" font-family="Arial" font-size="15">High findings</text>
+  <text x="958" y="278" fill="#A45500" font-family="Arial" font-size="40" font-weight="700">14</text>
+
+  <rect x="352" y="332" width="850" height="292" rx="20" fill="#FAFCFF" stroke="#D7E3F5"/>
+  <text x="378" y="374" fill="#14213D" font-family="Arial" font-size="22" font-weight="700">Session timeline</text>
+  <text x="378" y="420" fill="#14213D" font-family="Arial" font-size="16">• file_read blocked: ~/.ssh/id_rsa during webpage summary</text>
+  <text x="378" y="462" fill="#14213D" font-family="Arial" font-size="16">• http_request blocked: outbound to attacker.example</text>
+  <text x="378" y="504" fill="#14213D" font-family="Arial" font-size="16">• file_read allowed: /tmp/user-selected-notes.txt</text>
+</svg>
