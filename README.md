@@ -28,6 +28,24 @@ show real UI screens in sequence.
 
 This gives a clearer product UI preview than a workflow diagram while staying
 Git-diff friendly and non-binary.
+## Preview without GIFs (PR-friendly)
+
+If your repository policy blocks binary assets in PRs, keep the static SVG above
+and add a text-based flow preview using Mermaid.
+
+```mermaid
+flowchart LR
+    A[Agent action intercepted] --> B{Policy broker evaluates event}
+    B -->|allow| C[Action continues]
+    B -->|warn| D[User sees warning in UI]
+    B -->|block| E[Action blocked + audit event]
+    E --> F[Dashboard counters and timeline update]
+    D --> F
+    C --> F
+```
+
+This renders directly on GitHub, stays diff-friendly in code review, and avoids
+uploading binary GIF files.
 
 ## Why this exists
 
