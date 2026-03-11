@@ -219,6 +219,14 @@ make docker-up
 - Archive support is limited to `md` and `zip` uploads.
 - Frontend coverage is manual only; tests focus on backend logic and API smoke paths.
 
+## Function gap TODO sweep
+
+We reviewed currently missing product functions and shipped one fast win in this
+version: dashboard session/finding filters for quick incident drill-down.
+
+See [docs/todo.md](docs/todo.md) for the prioritized TODO list and completion
+status.
+
 ## Documentation
 
 - [docs/openclaw-integration.md](docs/openclaw-integration.md)
