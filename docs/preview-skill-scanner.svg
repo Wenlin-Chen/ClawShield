@@ -1,0 +1,34 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" rx="24" fill="#EEF4FB"/>
+  <rect x="32" y="32" width="1216" height="656" rx="20" fill="#FFFFFF"/>
+  <rect x="64" y="64" width="248" height="592" rx="20" fill="#0A2145"/>
+  <text x="92" y="114" fill="white" font-family="Arial" font-size="22" font-weight="700">ClawShield</text>
+  <rect x="92" y="184" width="192" height="42" rx="12" fill="#11315F"/>
+  <text x="120" y="211" fill="white" font-family="Arial" font-size="15">Dashboard</text>
+  <rect x="92" y="238" width="192" height="42" rx="12" fill="#1F6FEB"/>
+  <text x="120" y="265" fill="white" font-family="Arial" font-size="15">Skill Scanner</text>
+
+  <text x="352" y="108" fill="#5C677D" font-family="Arial" font-size="12" letter-spacing="1.5">SKILL SCANNER</text>
+  <text x="352" y="146" fill="#14213D" font-family="Arial" font-size="34" font-weight="700">Line-level findings and remediation hints</text>
+
+  <rect x="352" y="188" width="850" height="436" rx="20" fill="#FAFCFF" stroke="#D7E3F5"/>
+  <text x="380" y="228" fill="#14213D" font-family="Arial" font-size="20" font-weight="700">Recent scan highlights</text>
+
+  <rect x="380" y="252" width="794" height="88" rx="14" fill="white" stroke="#E1E8F5"/>
+  <text x="406" y="286" fill="#14213D" font-family="Arial" font-size="16">skill.py:87 — base64 decode + exec chain detected</text>
+  <text x="406" y="314" fill="#5C677D" font-family="Arial" font-size="14">Suggested action: remove execution path and decode only validated content.</text>
+  <rect x="1070" y="274" width="84" height="30" rx="15" fill="#FDE8ED"/>
+  <text x="1095" y="294" fill="#A51431" font-family="Arial" font-size="13" font-weight="700">HIGH</text>
+
+  <rect x="380" y="356" width="794" height="88" rx="14" fill="white" stroke="#E1E8F5"/>
+  <text x="406" y="390" fill="#14213D" font-family="Arial" font-size="16">installer.sh:12 — curl | bash remote execution pattern</text>
+  <text x="406" y="418" fill="#5C677D" font-family="Arial" font-size="14">Suggested action: vendor script and verify checksum before run.</text>
+  <rect x="1070" y="378" width="84" height="30" rx="15" fill="#FDE8ED"/>
+  <text x="1095" y="398" fill="#A51431" font-family="Arial" font-size="13" font-weight="700">HIGH</text>
+
+  <rect x="380" y="460" width="794" height="88" rx="14" fill="white" stroke="#E1E8F5"/>
+  <text x="406" y="494" fill="#14213D" font-family="Arial" font-size="16">utils.js:44 — read access to ~/.aws/credentials</text>
+  <text x="406" y="522" fill="#5C677D" font-family="Arial" font-size="14">Suggested action: scope file access to project-local paths only.</text>
+  <rect x="1070" y="482" width="84" height="30" rx="15" fill="#FFF4DA"/>
+  <text x="1098" y="502" fill="#A45500" font-family="Arial" font-size="13" font-weight="700">MED</text>
+</svg>

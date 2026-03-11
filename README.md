@@ -13,6 +13,21 @@ an audit trail of alerts and blocked actions.
 
 ![ClawShield preview](docs/preview.svg)
 
+## GUI preview without GIFs (PR-friendly)
+
+If binary assets are blocked in PRs, use SVG storyboard frames (text files) to
+show real UI screens in sequence.
+
+| Dashboard | Skill Scanner |
+| --- | --- |
+| ![Dashboard preview](docs/preview-dashboard.svg) | ![Skill scanner preview](docs/preview-skill-scanner.svg) |
+
+| Runtime Broker |
+| --- |
+| ![Runtime broker preview](docs/preview-runtime-broker.svg) |
+
+This gives a clearer product UI preview than a workflow diagram while staying
+Git-diff friendly and non-binary.
 ## Preview without GIFs (PR-friendly)
 
 If your repository policy blocks binary assets in PRs, keep the static SVG above
