@@ -13,6 +13,25 @@ an audit trail of alerts and blocked actions.
 
 ![ClawShield preview](docs/preview.svg)
 
+## Preview without GIFs (PR-friendly)
+
+If your repository policy blocks binary assets in PRs, keep the static SVG above
+and add a text-based flow preview using Mermaid.
+
+```mermaid
+flowchart LR
+    A[Agent action intercepted] --> B{Policy broker evaluates event}
+    B -->|allow| C[Action continues]
+    B -->|warn| D[User sees warning in UI]
+    B -->|block| E[Action blocked + audit event]
+    E --> F[Dashboard counters and timeline update]
+    D --> F
+    C --> F
+```
+
+This renders directly on GitHub, stays diff-friendly in code review, and avoids
+uploading binary GIF files.
+
 ## Why this exists
 
 OpenClaw-style local agents are powerful because they can read files, call tools,
