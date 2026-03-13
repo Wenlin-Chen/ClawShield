@@ -59,10 +59,10 @@ Match these lists to the tool names your OpenClaw install exposes:
 ```json
 {
   "fileReadTools": ["read", "fs.read"],
-  "fileWriteTools": ["write", "apply_patch", "fs.write"],
-  "shellTools": ["exec", "shell", "system.run"],
-  "httpTools": ["browser", "web_fetch", "fetch_url"],
-  "contentInspectionTools": ["browser", "web_fetch", "fetch_url", "read"],
+  "fileWriteTools": ["write", "edit", "apply_patch"],
+  "shellTools": ["exec", "bash", "process"],
+  "httpTools": ["browser", "web_fetch", "web_search"],
+  "contentInspectionTools": ["browser", "web_fetch", "web_search", "read"],
   "ignoredTools": ["session_status"],
   "unclassifiedToolPolicy": "block"
 }

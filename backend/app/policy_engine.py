@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shlex
 from urllib.parse import urlparse
 
 from . import db
@@ -58,6 +59,22 @@ def get_session_context(session_id: str | None) -> dict[str, bool]:
     }
 
 
+def shell_command_sensitive_labels(command: str) -> list[str]:
+    labels: list[str] = []
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        tokens = command.split()
+
+    for token in tokens:
+        if token.startswith("-"):
+            continue
+        for label in match_sensitive_path(token):
+            if label not in labels:
+                labels.append(label)
+    return labels
+
+
 def evaluate_event(event: RuntimeEventRequest) -> PolicyDecisionResponse:
     decision = Decision.ALLOW
     reasons: list[str] = []
@@ -77,6 +94,11 @@ def evaluate_event(event: RuntimeEventRequest) -> PolicyDecisionResponse:
 
     if event.event_type == EventType.SHELL_EXEC:
         command = event.command or ""
+        sensitive_labels = shell_command_sensitive_labels(command)
+        if sensitive_labels:
+            decision = strictest(decision, Decision.BLOCK)
+            reasons.append(f"Shell command targets sensitive location(s): {', '.join(sensitive_labels)}.")
+            matched_rules.append("block-shell-sensitive-paths")
         for rule_name, pattern in DANGEROUS_COMMAND_PATTERNS:
             if pattern.search(command):
                 decision = strictest(decision, Decision.BLOCK)
@@ -140,4 +162,3 @@ def build_alert(
         description=" ".join(reasons),
         evidence=evidence,
     )
-

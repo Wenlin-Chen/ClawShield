@@ -5,10 +5,10 @@ const DEFAULT_CONFIG = {
   inspectToolResults: true,
   contentMaxChars: 12000,
   fileReadTools: ["read"],
-  fileWriteTools: ["write", "apply_patch"],
-  shellTools: ["exec", "shell", "system.run"],
-  httpTools: ["browser", "web_fetch", "fetch_url"],
-  contentInspectionTools: ["browser", "web_fetch", "fetch_url", "read"],
+  fileWriteTools: ["write", "edit", "apply_patch"],
+  shellTools: ["exec", "bash", "process"],
+  httpTools: ["browser", "web_fetch", "web_search"],
+  contentInspectionTools: ["browser", "web_fetch", "web_search", "read"],
   ignoredTools: ["session_status"],
   unclassifiedToolPolicy: "block",
 };
@@ -244,7 +244,24 @@ async function requestJson(url, init) {
     },
   });
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText} (${url})`);
+    let detail = "";
+    const responseType = response.headers.get("content-type") || "";
+    try {
+      if (responseType.includes("application/json")) {
+        const payload = await response.json();
+        if (typeof payload?.detail === "string" && payload.detail.trim()) {
+          detail = payload.detail.trim();
+        } else {
+          detail = JSON.stringify(payload);
+        }
+      } else {
+        detail = (await response.text()).trim();
+      }
+    } catch {
+      detail = "";
+    }
+    const suffix = detail ? ` - ${detail}` : "";
+    throw new Error(`${response.status} ${response.statusText} (${url})${suffix}`);
   }
   return response.json();
 }
@@ -309,22 +326,38 @@ function installCliCommands(api, pluginConfig) {
         .command("doctor")
         .description("Check that the local ClawShield backend is reachable")
         .action(async () => {
-          await checkBackendHealth(pluginConfig);
-          console.log(`ClawShield backend reachable at ${pluginConfig.backendUrl}`);
+          try {
+            await checkBackendHealth(pluginConfig);
+            console.log(`ClawShield backend reachable at ${pluginConfig.backendUrl}`);
+          } catch (error) {
+            console.error(
+              `ClawShield doctor failed: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            process.exitCode = 1;
+          }
         });
 
       clawshield
         .command("scan-skill <path>")
         .description("Scan a skill directory or single skill file with ClawShield")
         .action(async (path) => {
-          const result = await scanSkill(pluginConfig, path);
-          console.log(`Recommendation: ${String(result.recommendation).toUpperCase()}`);
-          console.log(`Score: ${result.score}`);
-          for (const finding of result.findings || []) {
-            console.log(`- ${finding.severity}: ${finding.title} [${finding.file_path}]`);
-          }
-          if (result.recommendation === "block") {
-            process.exitCode = 2;
+          try {
+            const result = await scanSkill(pluginConfig, path);
+            console.log(`Recommendation: ${String(result.recommendation).toUpperCase()}`);
+            console.log(`Score: ${result.score}`);
+            for (const finding of result.findings || []) {
+              console.log(`- ${finding.severity}: ${finding.title} [${finding.file_path}]`);
+            }
+            if (result.recommendation === "block") {
+              process.exitCode = 2;
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(`ClawShield scan-skill failed: ${message}`);
+            console.error(
+              "If the path is outside the backend scan roots, set CLAWSHIELD_SCAN_ROOTS on the backend or move the skill under an allowed root such as ~/.openclaw/skills.",
+            );
+            process.exitCode = 1;
           }
         });
 
