@@ -76,11 +76,11 @@ Example:
           "blockOnWarn": false,
           "failClosed": true,
           "inspectToolResults": true,
-          "fileReadTools": ["read", "fs.read"],
-          "fileWriteTools": ["write", "apply_patch", "fs.write"],
-          "shellTools": ["exec", "shell", "system.run"],
-          "httpTools": ["browser", "web_fetch", "fetch_url"],
-          "contentInspectionTools": ["browser", "web_fetch", "fetch_url", "read"],
+          "fileReadTools": ["read"],
+          "fileWriteTools": ["write", "edit", "apply_patch"],
+          "shellTools": ["exec", "bash", "process"],
+          "httpTools": ["browser", "web_fetch", "web_search"],
+          "contentInspectionTools": ["browser", "web_fetch", "web_search", "read"],
           "ignoredTools": ["session_status"],
           "unclassifiedToolPolicy": "block"
         }
@@ -93,12 +93,16 @@ Example:
 ### 4. Match the tool-name lists to your OpenClaw install
 
 This step means: tell the `ClawShield` plugin which OpenClaw tool names should
-be treated as file reads, file writes, shell commands, HTTP fetches, or tools
+be treated as file reads, file writes, shell commands, HTTP/web tools, or tools
 to ignore.
 
-If you skip this step and your OpenClaw install uses different tool names than
-the defaults, the plugin may load successfully but not intercept the actions
-you expect.
+For most users, you do not need to inspect `~/.openclaw/openclaw.json` at all.
+Those fields are optional and may not exist yet. `tools.allow`, `tools.deny`,
+and `agents.list[].tools.*` are OpenClaw tool-restriction settings, not where
+ClawShield gets its defaults from.
+
+If you use a standard OpenClaw install, you can copy the default mapping below
+and move on.
 
 #### What to do
 
@@ -108,18 +112,34 @@ you expect.
 ~/.openclaw/openclaw.json
 ```
 
-2. Look for tool names already used by your OpenClaw setup. The official docs
-   show these are usually found in one or more of these places:
+2. Add this `clawshield` config under `plugins.entries.clawshield` if you do
+   not already have it:
 
-- `tools.allow`
-- `tools.deny`
-- `agents.list[].tools.allow`
-- `agents.list[].tools.alsoAllow`
+```json
+{
+  "enabled": true,
+  "config": {
+    "backendUrl": "http://127.0.0.1:8000/api",
+    "blockOnWarn": false,
+    "failClosed": true,
+    "inspectToolResults": true,
+    "fileReadTools": ["read"],
+    "fileWriteTools": ["write", "edit", "apply_patch"],
+    "shellTools": ["exec", "bash", "process"],
+    "httpTools": ["browser", "web_fetch", "web_search"],
+    "contentInspectionTools": ["browser", "web_fetch", "web_search", "read"],
+    "ignoredTools": ["session_status"],
+    "unclassifiedToolPolicy": "block"
+  }
+}
+```
 
-3. Copy the concrete tool names you see there into the `clawshield` plugin
-   config.
+3. Restart the OpenClaw Gateway.
 
-4. Put each tool name into the correct `ClawShield` category:
+4. Only if you use extra plugin tools or a custom tool setup, adjust the lists
+   above to include your actual tool names.
+
+Put each tool name into the correct `ClawShield` category:
 
 - `fileReadTools`: tools that read local files
 - `fileWriteTools`: tools that write or patch files
@@ -130,42 +150,24 @@ you expect.
 - `unclassifiedToolPolicy`: what to do when OpenClaw calls a tool that is not
   in any of the lists above
 
-#### Example
-
-If your OpenClaw config or installed tools show names like these:
-
-- `read`
-- `write`
-- `apply_patch`
-- `exec`
-- `browser`
-- `session_status`
-
-Then your `clawshield` plugin config should look like:
-
-```json
-{
-  "fileReadTools": ["read"],
-  "fileWriteTools": ["write", "apply_patch"],
-  "shellTools": ["exec"],
-  "httpTools": ["browser"],
-  "contentInspectionTools": ["browser", "read"],
-  "ignoredTools": ["session_status"],
-  "unclassifiedToolPolicy": "block"
-}
-```
-
 #### Important notes
 
-- Use the exact tool names OpenClaw uses.
+- You do not need `tools.allow`, `tools.deny`, `agents.list[].tools.allow`, or
+  `agents.list[].tools.alsoAllow` to already exist. Those keys are optional.
+- Start with the ready-made mapping above unless you know your setup uses
+  different tool names.
+- Use the exact tool names OpenClaw uses if you customize the mapping.
 - Matching is case-insensitive.
 - Do not put group names such as `group:plugins` into these lists. Use concrete
   tool names only.
 - Unclassified tools are blocked by default. If OpenClaw calls a tool that is
   missing from these lists, add it to the right category or place it in
   `ignoredTools` if you intentionally do not want ClawShield to inspect it.
-- Start with the defaults shown above if you use a standard local coding setup,
-  then adjust only if your OpenClaw config uses different names.
+- Common built-in names from the official docs are:
+  - file tools: `read`, `write`, `edit`, `apply_patch`
+  - runtime tools: `exec`, `bash`, `process`
+  - web/UI tools: `web_fetch`, `web_search`, `browser`
+  - session/status tools: `session_status`
 
 This plugin config only controls which OpenClaw tools map into which ClawShield
 event types. The actual detection and policy rules still live in the backend.
@@ -225,11 +227,20 @@ For security, path-based scans are limited to configured scan roots. By
 default, ClawShield allows:
 
 - `~/.openclaw/skills`
+- `~/.openclaw/workspace/skills`
 - `<clawshield-repo>/skills`
 - `<clawshield-repo>/backend/demo_skills`
 
 If your skills live elsewhere, set `CLAWSHIELD_SCAN_ROOTS` on the backend to a
 comma-separated list of allowed skill directories.
+
+If `openclaw clawshield scan-skill /path/to/skill` returns `400 Bad Request`,
+the most common cause is that the backend does not allow that path yet. In that
+case:
+
+1. Set `CLAWSHIELD_SCAN_ROOTS` where the backend service runs.
+2. Restart the backend.
+3. Re-run `openclaw clawshield scan-skill /path/to/skill`.
 
 ### 9. Review what happened in the ClawShield dashboard
 

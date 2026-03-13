@@ -37,6 +37,22 @@ def test_warns_on_unknown_domain(isolated_db: str) -> None:
     assert "warn-unknown-domain" in response.matched_rules
 
 
+def test_blocks_shell_commands_targeting_sensitive_paths(isolated_db: str) -> None:
+    response = evaluate_event(
+        RuntimeEventRequest(
+            event_type="shell_exec",
+            actor="assistant",
+            task="list files in ~/.ssh",
+            target_resource="ls -al ~/.ssh",
+            provenance="tool",
+            command="ls -al ~/.ssh",
+        )
+    )
+
+    assert response.decision == Decision.BLOCK
+    assert "block-shell-sensitive-paths" in response.matched_rules
+
+
 def test_allows_benign_user_selected_file(isolated_db: str) -> None:
     response = evaluate_event(
         RuntimeEventRequest(
@@ -81,4 +97,3 @@ def test_escalates_outbound_after_prompt_injection(isolated_db: str) -> None:
 
     assert response.decision == Decision.BLOCK
     assert "escalate-after-injection" in response.matched_rules
-

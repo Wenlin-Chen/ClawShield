@@ -17,6 +17,11 @@ test("normalizePluginConfig applies defaults", () => {
   assert.equal(config.unclassifiedToolPolicy, "block");
 });
 
+test("normalizePluginConfig appends /api for backend root URLs", () => {
+  const config = normalizePluginConfig({ backendUrl: "http://localhost:8000" });
+  assert.equal(config.backendUrl, "http://localhost:8000/api");
+});
+
 test("inferRuntimeEvent maps read tool to file_read", () => {
   const config = normalizePluginConfig({});
   const event = inferRuntimeEvent(
