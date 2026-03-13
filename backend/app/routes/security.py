@@ -47,6 +47,7 @@ def _scan_roots() -> list[Path]:
     else:
         raw_roots = [
             str(Path.home() / ".openclaw" / "skills"),
+            str(Path.home() / ".openclaw" / "workspace" / "skills"),
             str(REPO_ROOT / "skills"),
             str(BACKEND_ROOT / "demo_skills"),
         ]

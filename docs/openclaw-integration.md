@@ -227,6 +227,7 @@ For security, path-based scans are limited to configured scan roots. By
 default, ClawShield allows:
 
 - `~/.openclaw/skills`
+- `~/.openclaw/workspace/skills`
 - `<clawshield-repo>/skills`
 - `<clawshield-repo>/backend/demo_skills`
 
