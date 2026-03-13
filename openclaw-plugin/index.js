@@ -39,6 +39,15 @@ function asStringArray(value, fallback) {
   return value.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim());
 }
 
+function normalizeBackendUrl(value) {
+  if (typeof value !== "string" || !value.trim()) {
+    return DEFAULT_CONFIG.backendUrl;
+  }
+
+  const trimmed = value.trim().replace(/\/+$/, "");
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
+}
+
 export function normalizePluginConfig(raw = {}) {
   const unclassifiedToolPolicy =
     raw.unclassifiedToolPolicy === "allow" ||
@@ -48,10 +57,7 @@ export function normalizePluginConfig(raw = {}) {
       : DEFAULT_CONFIG.unclassifiedToolPolicy;
 
   return {
-    backendUrl:
-      typeof raw.backendUrl === "string" && raw.backendUrl.trim()
-        ? raw.backendUrl.replace(/\/+$/, "")
-        : DEFAULT_CONFIG.backendUrl,
+    backendUrl: normalizeBackendUrl(raw.backendUrl),
     blockOnWarn: Boolean(raw.blockOnWarn),
     failClosed:
       typeof raw.failClosed === "boolean" ? raw.failClosed : DEFAULT_CONFIG.failClosed,
@@ -238,7 +244,7 @@ async function requestJson(url, init) {
     },
   });
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
+    throw new Error(`${response.status} ${response.statusText} (${url})`);
   }
   return response.json();
 }

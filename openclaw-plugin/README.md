@@ -28,6 +28,9 @@ Then restart the OpenClaw Gateway so it reloads the plugin registry.
 Add config under `plugins.entries.clawshield.config` in your OpenClaw Gateway
 config.
 
+`backendUrl` may be either the API root (`http://127.0.0.1:8000/api`) or the
+backend root (`http://127.0.0.1:8000`). The plugin normalizes it to `/api`.
+
 Example:
 
 ```json

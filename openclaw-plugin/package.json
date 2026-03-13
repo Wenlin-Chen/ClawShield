@@ -1,5 +1,5 @@
 {
-  "name": "@clawshield/openclaw-plugin",
+  "name": "@clawshield/clawshield",
   "version": "0.1.0",
   "description": "ClawShield security plugin for OpenClaw",
   "type": "module",
